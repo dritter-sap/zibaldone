@@ -12,12 +12,16 @@ public class GraphDataLoaderConfig {
     private final String  serverName;
     private final Integer serverPort;
     private final long    batchSize;
+    private final long    numberVertices;
+    private final long    numberEdges;
 
-    public GraphDataLoaderConfig(String dbName, String serverName, Integer serverPort, long batchSize) {
+    public GraphDataLoaderConfig(String dbName, String serverName, Integer serverPort, long batchSize, long numberVertices, long numberEdges) {
         this.dbName = dbName;
         this.serverName = serverName;
         this.serverPort = serverPort;
         this.batchSize = batchSize;
+        this.numberVertices = numberVertices;
+        this.numberEdges = numberEdges;
     }
 
     public static GraphDataLoaderConfig load(final Properties props) {
@@ -26,6 +30,8 @@ public class GraphDataLoaderConfig {
             .serverName(props.getProperty("SERVER_NAME"))
             .serverPort(Integer.valueOf(props.getProperty("SERVER_PORT")))
             .batchSize(Long.valueOf(props.getProperty("BATCH_SIZE")))
+            .numberVertices(Long.valueOf(props.getProperty("NUMBER_VERTICES")))
+            .numberEdges(Long.valueOf(props.getProperty("NUMBER_EDGES")))
             .build();
         return config;
     }
@@ -36,6 +42,7 @@ public class GraphDataLoaderConfig {
         log.debug("\tserver:port   = {}:{}", this.getServerName(), this.getServerPort());
         log.debug("\tdatabase name = {}", this.getDbName());
         log.debug("\tbatch size    = {}", this.batchSize);
+        log.debug("\t#vertices     = {}", this.numberVertices);
         log.debug("Memory total {}, free {}", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
     }
 
@@ -53,5 +60,13 @@ public class GraphDataLoaderConfig {
 
     public long getBatchSize() {
         return batchSize;
+    }
+
+    public long getNumberVertices() {
+        return this.numberVertices;
+    }
+
+    public long getNumberEdges() {
+        return this.numberEdges;
     }
 }

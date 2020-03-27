@@ -51,8 +51,14 @@ public class MassGraphDataLoader {
   @Option(name = {"-edgeFileName", "--edgeFileName"}, description = "Edge CSV file")
   private String edgeFileName = "edges.csv";
 
-  @Option(name = {"-batchSize", "--batchSize"}, description = "Edge CSV file")
+  @Option(name = {"-batchSize", "--batchSize"}, description = "Batch size")
   private int batchSize = 1000;
+
+  @Option(name = {"-numberVertices", "--numberVertices"}, description = "Expected number of vertices")
+  private int numberVertices  = 10;
+
+  @Option(name = {"-numberEdges", "--numberEdges"}, description = "Expected number of edges")
+  private int numberEdges  = 10;
 
   public static void main(String[] args) {
     final SingleCommand<MassGraphDataLoader> parser = SingleCommand.singleCommand(MassGraphDataLoader.class);
@@ -94,6 +100,12 @@ public class MassGraphDataLoader {
     if (this.batchSize != 0) {
       props.setProperty("BATCH_SIZE", String.valueOf(this.batchSize));
     }
+    if (this.numberVertices != 0) {
+      props.setProperty("NUMBER_VERTICES", String.valueOf(this.numberVertices));
+    }
+    if (this.numberEdges != 0) {
+      props.setProperty("NUMBER_EDGES", String.valueOf(this.numberEdges));
+    }
   }
 
   public void process(final GraphDataLoader dataLoader, final GraphDataLoaderConfig config, final String userName,
@@ -110,7 +122,7 @@ public class MassGraphDataLoader {
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
         contextVertices = dataLoader.loadVertices(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
-            "UUID_NVARCHAR", bc);
+            "UUID_NVARCHAR", bc, config.getNumberVertices());
         log.debug("load vertices(ms) " + (System.currentTimeMillis() - start));
       }
       log.debug("loading edges...");
@@ -118,7 +130,8 @@ public class MassGraphDataLoader {
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
         final long start = System.currentTimeMillis();
         dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
-            "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc);
+            "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
+            config.getNumberEdges());
         log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
       }
     } finally {

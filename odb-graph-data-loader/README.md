@@ -60,5 +60,4 @@ Further interesting libraries?
 TODOs:
 - implement alternative approach
 - add stats: `SummaryStatistics`
-- add progress bar (e.g. https://github.com/ctongfei/progressbar)
 - add verification step: all vertices and edges created

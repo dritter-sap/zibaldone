@@ -1,6 +1,7 @@
 package data.loaders;
 
 import com.orientechnologies.orient.core.db.ODatabaseSession;
+import me.tongfei.progressbar.ProgressBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +22,11 @@ public class BatchCoordinator {
     session.commit();
   }
 
-  public void iterate(final ODatabaseSession session, final long recordNumber) {
+  public void iterate(final ODatabaseSession session, final long recordNumber, final ProgressBar pb) {
     if (recordNumber % batchSize == 0) {
       session.commit();
-      log.debug("Record: " + recordNumber);
-      log.debug("Total {}, free {} memory", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
+      // log.debug("Record: " + recordNumber);
+      pb.stepBy(batchSize);
       session.begin();
     }
   }

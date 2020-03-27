@@ -10,9 +10,11 @@ public class GraphDataLoaderBuilder {
     private String  serverName;
     private Integer serverPort;
     private long batchSize;
+    private Long numberVertices;
+    private Long numberEdges;
 
     public GraphDataLoaderConfig build() {
-        return new GraphDataLoaderConfig(dbName, serverName, serverPort, batchSize);
+        return new GraphDataLoaderConfig(dbName, serverName, serverPort, batchSize, numberVertices, numberEdges);
     }
 
     public GraphDataLoaderBuilder dbName(final String dbName) {
@@ -32,6 +34,16 @@ public class GraphDataLoaderBuilder {
 
     public GraphDataLoaderBuilder batchSize(final long batchSize) {
         this.batchSize = batchSize;
+        return this;
+    }
+
+    public GraphDataLoaderBuilder numberVertices(final Long numberVertices) {
+        this.numberVertices = numberVertices;
+        return this;
+    }
+
+    public GraphDataLoaderBuilder numberEdges(Long numberEdges) {
+        this.numberEdges = numberEdges;
         return this;
     }
 }

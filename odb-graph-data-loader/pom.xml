@@ -39,18 +39,10 @@
             <version>2.7.2</version>
         </dependency>
 
-        <!-- csv queries -->
         <dependency>
-            <groupId>org.xbib.jdbc</groupId>
-            <artifactId>jdbc-driver-csv</artifactId>
-            <version>1.2.0</version>
-        </dependency>
-
-        <!-- plotting -->
-        <dependency>
-            <groupId>org.knowm.xchart</groupId>
-            <artifactId>xchart</artifactId>
-            <version>3.5.2</version>
+            <groupId>me.tongfei</groupId>
+            <artifactId>progressbar</artifactId>
+            <version>0.8.1</version>
         </dependency>
 
         <!-- test -->

@@ -5,6 +5,7 @@ import com.orientechnologies.orient.core.db.*;
 import com.orientechnologies.orient.core.record.OEdge;
 import com.orientechnologies.orient.core.record.OElement;
 import com.orientechnologies.orient.core.record.OVertex;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
@@ -42,35 +43,44 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   @Override
   public Map<String, OVertex> loadVertices(final CSVParser records, final String odbVertexClassName, final String[] vertexHeader,
-                                           final String vertexKeyFieldName, final BatchCoordinator bc) {
-    final Map<String, OVertex> vertices = new HashMap<>();
-    try (final ODatabaseSession session = pool.acquire()) {
-      session.createVertexClass(odbVertexClassName);
+                                           final String vertexKeyFieldName, final BatchCoordinator bc, final long expectedMax) {
+    try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
+      final Map<String, OVertex> vertices = new HashMap<>();
+      try (final ODatabaseSession session = pool.acquire()) {
+        session.createVertexClass(odbVertexClassName);
 
-      bc.begin(session);
-      for (final CSVRecord record : records) {
-        final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record);
-        vertices.put(record.get(vertexKeyFieldName), vertex);
-        bc.iterate(session, records.getRecordNumber());
+        bc.begin(session);
+        for (final CSVRecord record : records) {
+          final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record);
+          vertices.put(record.get(vertexKeyFieldName), vertex);
+          bc.iterate(session, records.getRecordNumber(), pb);
+        }
+        bc.end(session);
+        pb.stepTo(expectedMax);
       }
-      bc.end(session);
+      log.debug("Total {}, free {} memory", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
+      return vertices;
     }
-    return vertices;
   }
 
   @Override
   public void loadEdges(final CSVParser records, final String odbEdgeClassName, final String[] edgeHeader,
                         final String edgeSrcKeyFieldName, final String edgeTrgtKeyFieldName, Map<String, OVertex> vertices,
-                        final BatchCoordinator bc) {
-    try (final ODatabaseSession session = pool.acquire()) {
-      session.createEdgeClass(odbEdgeClassName);
+                        final BatchCoordinator bc, long expectedMax) {
+    try (ProgressBar pb = new ProgressBar("Edges", expectedMax)) {
+      try (final ODatabaseSession session = pool.acquire()) {
+        session.createEdgeClass(odbEdgeClassName);
 
-      bc.begin(session);
-      for (final CSVRecord record : records) {
-        this.createEdge(odbEdgeClassName, edgeHeader, edgeSrcKeyFieldName, edgeTrgtKeyFieldName, vertices, session, record);
-        bc.iterate(session, records.getRecordNumber());
+        bc.begin(session);
+        for (final CSVRecord record : records) {
+          this.createEdge(odbEdgeClassName, edgeHeader, edgeSrcKeyFieldName, edgeTrgtKeyFieldName, vertices, session, record);
+          bc.iterate(session, records.getRecordNumber(), pb);
+        }
+        bc.end(session);
+        pb.stepTo(expectedMax);
+        log.debug("used {}, free {} memory", Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory(),
+            Runtime.getRuntime().freeMemory());
       }
-      bc.end(session);
     }
   }
 
