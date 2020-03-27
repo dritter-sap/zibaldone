@@ -67,11 +67,11 @@ public class MassGraphDataLoader {
       final GraphDataLoaderConfig config = GraphDataLoaderConfig.load(props);
       final long start = System.currentTimeMillis();
       this.process(graphDataLoader, config, this.userName, this.password, this.vertexFileName, this.edgeFileName);
-      log.error("Process(ms) " + (System.currentTimeMillis() - start));
+      log.debug("Process(ms) " + (System.currentTimeMillis() - start));
     } catch (final IOException e) {
-      log.error("Failed to load configuration properties " + DATA_LOADER_PROPERTIES, e);
+      log.debug("Failed to load configuration properties " + DATA_LOADER_PROPERTIES, e);
     } catch (final Exception e) {
-      log.error("Failed to process data with data loader " + graphDataLoader, e);
+      log.debug("Failed to process data with data loader " + graphDataLoader, e);
     }
   }
 
@@ -98,20 +98,22 @@ public class MassGraphDataLoader {
     dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password);
     Map<String, OVertex> contextVertices = null;
     try {
+      log.debug("loading vertices...");
       try (final Reader records = new FileReader(vertexFileName)) {
         // 'getRecords()' removes the records
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
         contextVertices = dataLoader.loadVertices(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
             "UUID_NVARCHAR", bc);
-        log.error("load vertices(ms) " + (System.currentTimeMillis() - start));
+        log.debug("load vertices(ms) " + (System.currentTimeMillis() - start));
       }
+      log.debug("loading edges...");
       try (final Reader records = new FileReader(edgeFileName)){
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
         final long start = System.currentTimeMillis();
         dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
             "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc);
-        log.error("load edges(ms) " + (System.currentTimeMillis() - start));
+        log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
       }
     } finally {
       dataLoader.disconnect(config.getDbName());
