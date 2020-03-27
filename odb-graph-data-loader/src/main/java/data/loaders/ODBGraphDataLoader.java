@@ -5,6 +5,7 @@ import com.orientechnologies.orient.core.db.*;
 import com.orientechnologies.orient.core.record.OEdge;
 import com.orientechnologies.orient.core.record.OElement;
 import com.orientechnologies.orient.core.record.OVertex;
+import data.MemoryUtils;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -58,7 +59,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         bc.end(session);
         pb.stepTo(expectedMax);
       }
-      log.debug("Total {}, free {} memory", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
+      log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
       return vertices;
     }
   }
@@ -78,8 +79,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         }
         bc.end(session);
         pb.stepTo(expectedMax);
-        log.debug("used {}, free {} memory", Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory(),
-            Runtime.getRuntime().freeMemory());
+        log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
       }
     }
   }

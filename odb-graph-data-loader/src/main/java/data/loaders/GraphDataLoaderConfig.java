@@ -43,6 +43,7 @@ public class GraphDataLoaderConfig {
         log.debug("\tdatabase name = {}", this.getDbName());
         log.debug("\tbatch size    = {}", this.batchSize);
         log.debug("\t#vertices     = {}", this.numberVertices);
+        log.debug("\t#edges        = {}", this.numberEdges);
         log.debug("Memory total {}, free {}", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
     }
 

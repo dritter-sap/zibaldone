@@ -1,6 +1,7 @@
 package data.loaders;
 
 import com.orientechnologies.orient.core.db.ODatabaseSession;
+import data.MemoryUtils;
 import me.tongfei.progressbar.ProgressBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,7 @@ public class BatchCoordinator {
       // log.debug("Record: " + recordNumber);
       pb.stepBy(batchSize);
       if (recordNumber % (batchSize * 100) == 0) {
-        pb.setExtraMessage("Mem(used/free)" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) +
-            "/" + Runtime.getRuntime().freeMemory());
+        pb.setExtraMessage("Mem(used/max)" + MemoryUtils.usedMemoryInMB() + "/" + MemoryUtils.maxMemoryInMB());
       }
       session.begin();
     }
