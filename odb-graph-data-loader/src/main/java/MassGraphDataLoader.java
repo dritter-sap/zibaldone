@@ -51,6 +51,9 @@ public class MassGraphDataLoader {
   @Option(name = {"-edgeFileName", "--edgeFileName"}, description = "Edge CSV file")
   private String edgeFileName = "edges.csv";
 
+  @Option(name = {"-batchSize", "--batchSize"}, description = "Edge CSV file")
+  private int batchSize = 1000;
+
   public static void main(String[] args) {
     final SingleCommand<MassGraphDataLoader> parser = SingleCommand.singleCommand(MassGraphDataLoader.class);
     Arrays.asList(args).stream().forEach(p -> System.out.print(p + "##"));
@@ -87,6 +90,9 @@ public class MassGraphDataLoader {
     }
     if (this.dbname.isEmpty()) {
       props.setProperty("DB_NAME", String.valueOf(this.dbname));
+    }
+    if (this.batchSize != 0) {
+      props.setProperty("BATCH_SIZE", String.valueOf(this.batchSize));
     }
   }
 

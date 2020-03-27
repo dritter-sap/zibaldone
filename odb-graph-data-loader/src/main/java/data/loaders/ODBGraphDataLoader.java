@@ -3,6 +3,7 @@ package data.loaders;
 import com.orientechnologies.orient.core.config.OGlobalConfiguration;
 import com.orientechnologies.orient.core.db.*;
 import com.orientechnologies.orient.core.record.OEdge;
+import com.orientechnologies.orient.core.record.OElement;
 import com.orientechnologies.orient.core.record.OVertex;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -76,7 +77,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   private OVertex createVertex(String odbVertexClassName, String[] vertexHeader, ODatabaseSession session, CSVRecord record) {
     final OVertex vertex = session.newVertex(odbVertexClassName);
     for (int i=0; i<vertexHeader.length; i++) {
-      vertex.setProperty(vertexHeader[i], record.get(i));
+      setPropertyIfNotNullOrEmpty(vertex, vertexHeader[i], record.get(i));
     }
     vertex.save();
     return vertex;
@@ -87,8 +88,14 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     final String trgt = record.get(edgeTrgtKeyFieldName);
     final OEdge edge = session.newEdge(vertices.get(src), vertices.get(trgt), odbEdgeClassName);
     for (int i = 0; i < edgeHeader.length; i++) {
-      edge.setProperty(edgeHeader[i], record.get(i));
+      setPropertyIfNotNullOrEmpty(edge, edgeHeader[i], record.get(i));
     }
     edge.save();
+  }
+
+  private void setPropertyIfNotNullOrEmpty(final OElement element, final String header, final String value) {
+    if (null != value && !value.isEmpty()) {
+      element.setProperty(header, value);
+    }
   }
 }

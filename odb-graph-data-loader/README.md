@@ -50,7 +50,15 @@ We tried out one, which worked for a real-world data set.
 If you tried out others, which worked or not, feel free to share them here.
 
 Alternative design approaches from ground up with batch processing framework include but are not limited to:
-
 - Apache Samza: http://samza.apache.org/
 - Spring-batch: https://spring.io/projects/spring-batch
 - Easy batch: https://github.com/j-easy/easy-batch
+
+Further interesting libraries?
+- launch4j: http://launch4j.sourceforge.net/index.html
+
+TODOs:
+- implement alternative approach
+- add stats: `SummaryStatistics`
+- add progress bar (e.g. https://github.com/ctongfei/progressbar)
+- add verification step: all vertices and edges created
