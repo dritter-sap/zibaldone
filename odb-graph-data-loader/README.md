@@ -36,9 +36,9 @@ Alternatively, consider keeping smaller OVertex instances in memory at a time (k
 ### Evaluation
 
 Evaluate on real-world data with 3.9 GB of node and 39.5 GB of edge data.
-OrientDB v3.0.24, Java 1.8, with machine settings ...:
+OrientDB v3.0.24, Java 1.8:
 
-|                   | Time                    | Space        |
+|                   | Time                    | Space(mem)   |
 |-------------------|-------------------------|--------------|
 | Nodes (23876665)  | 1979033 ms (~32.98 min) | 69,290.93 MB |
 | Edges (123953512) |                         |              |
