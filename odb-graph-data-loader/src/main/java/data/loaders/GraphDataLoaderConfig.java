@@ -36,6 +36,7 @@ public class GraphDataLoaderConfig {
         log.debug("\tserver:port   = {}:{}", this.getServerName(), this.getServerPort());
         log.debug("\tdatabase name = {}", this.getDbName());
         log.debug("\tbatch size    = {}", this.batchSize);
+        log.debug("Memory total {}, free {}", Runtime.getRuntime().totalMemory(), Runtime.getRuntime().freeMemory());
     }
 
     public String getDbName() {
