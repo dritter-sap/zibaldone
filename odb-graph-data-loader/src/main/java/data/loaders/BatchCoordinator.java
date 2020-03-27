@@ -27,6 +27,10 @@ public class BatchCoordinator {
       session.commit();
       // log.debug("Record: " + recordNumber);
       pb.stepBy(batchSize);
+      if (recordNumber % (batchSize * 100) == 0) {
+        pb.setExtraMessage("Mem(used/free)" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) +
+            "/" + Runtime.getRuntime().freeMemory());
+      }
       session.begin();
     }
   }
