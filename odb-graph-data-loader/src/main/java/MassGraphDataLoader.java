@@ -95,7 +95,7 @@ public class MassGraphDataLoader {
       props.setProperty("SERVER_PORT", String.valueOf(this.port));
     }
     if (this.dbname.isEmpty()) {
-      props.setProperty("DB_NAME", String.valueOf(this.dbname));
+      props.setProperty("DB_NAME", this.dbname);
     }
     if (this.batchSize != 0) {
       props.setProperty("BATCH_SIZE", String.valueOf(this.batchSize));
