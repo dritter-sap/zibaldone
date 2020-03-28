@@ -43,8 +43,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   }
 
   @Override
-  public Map<String, OVertex> loadVertices(final CSVParser records, final String odbVertexClassName, final String[] vertexHeader,
-                                           final String vertexKeyFieldName, final BatchCoordinator bc, final long expectedMax) {
+  public Map<String, OVertex> loadVertexKeys(final CSVParser records, final String odbVertexClassName, final String[] vertexHeader,
+                                             final String vertexKeyFieldName, final BatchCoordinator bc, final long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
       final Map<String, OVertex> vertices = new HashMap<>();
       try (final ODatabaseSession session = pool.acquire()) {
@@ -52,7 +52,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
         bc.begin(session);
         for (final CSVRecord record : records) {
-          final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record);
+          final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record, vertexKeyFieldName);
           vertices.put(record.get(vertexKeyFieldName), vertex);
           bc.iterate(session, records.getRecordNumber(), pb);
         }
@@ -84,10 +84,19 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     }
   }
 
-  private OVertex createVertex(String odbVertexClassName, String[] vertexHeader, ODatabaseSession session, CSVRecord record) {
+  @Override
+  public void loadVertexProperties() {
+    // TODO
+  }
+
+  private OVertex createVertex(String odbVertexClassName, String[] vertexHeader, ODatabaseSession session,
+                               CSVRecord record, String vertexKeyFieldName) {
     final OVertex vertex = session.newVertex(odbVertexClassName);
     for (int i=0; i<vertexHeader.length; i++) {
-      setPropertyIfNotNullOrEmpty(vertex, vertexHeader[i], record.get(i));
+      // FIXME: enable properties
+      if (vertexHeader[i].equals(vertexKeyFieldName)) {
+        setPropertyIfNotNullOrEmpty(vertex, vertexHeader[i], record.get(i));
+      }
     }
     vertex.save();
     return vertex;
@@ -104,9 +113,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   }
 
   private void setPropertyIfNotNullOrEmpty(final OElement element, final String header, final String value) {
-    // FIXME: enable properties
-    /*if (null != value && !value.isEmpty()) {
+    if (null != value && !value.isEmpty()) {
       element.setProperty(header, value);
-    }*/
+    }
   }
 }

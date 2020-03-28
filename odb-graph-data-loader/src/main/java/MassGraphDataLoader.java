@@ -116,14 +116,14 @@ public class MassGraphDataLoader {
     dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password);
     Map<String, OVertex> contextVertices = null;
     try {
-      log.debug("loading vertices...");
+      log.debug("loading vertex keys...");
       try (final Reader records = new FileReader(vertexFileName)) {
         // 'getRecords()' removes the records
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
-        contextVertices = dataLoader.loadVertices(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
+        contextVertices = dataLoader.loadVertexKeys(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
             "UUID_NVARCHAR", bc, config.getNumberVertices());
-        log.debug("load vertices(ms) " + (System.currentTimeMillis() - start));
+        log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
       }
       log.debug("loading edges...");
       try (final Reader records = new FileReader(edgeFileName)){
@@ -133,6 +133,14 @@ public class MassGraphDataLoader {
             "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
             config.getNumberEdges());
         log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
+      }
+      log.debug("loading vertex props...");
+      try (final Reader records = new FileReader(vertexFileName)) {
+        // 'getRecords()' removes the records
+        final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
+        final long start = System.currentTimeMillis();
+        dataLoader.loadVertexProperties();
+        log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
       }
     } finally {
       dataLoader.disconnect(config.getDbName());
