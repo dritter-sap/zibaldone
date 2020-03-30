@@ -96,16 +96,17 @@
                             <goal>shade</goal>
                         </goals>
 
-                        <!--<configuration>
+                        <configuration>
                             <finalName>odbgraphdataloader</finalName>
                             <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
                             <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>MassGraphDataLoader</mainClass>
                                 </transformer>
                             </transformers>
-                            <filters>
+                            <!--<filters>
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
@@ -114,13 +115,13 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                            </filters>
-                        </configuration>-->
-                        <configuration>
+                            </filters>-->
+                        </configuration>
+                        <!--<configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
-                        </configuration>
+                        </configuration>-->
                     </execution>
                 </executions>
             </plugin>
