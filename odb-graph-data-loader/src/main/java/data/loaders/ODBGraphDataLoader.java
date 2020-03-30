@@ -33,7 +33,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MAX, 10);
     final OrientDBConfig oriendDBconfig = poolCfg.build();
     // orient = new OrientDB(serverName, userName, password, oriendDBconfig);
-    orient = new OrientDB(serverName, oriendDBconfig);
+    orient = new OrientDB(serverName, OrientDBConfig.defaultConfig());
     orient.create(dbName, ODatabaseType.PLOCAL);
     pool = new ODatabasePool(orient, dbName, "admin", "admin", oriendDBconfig);
   }
