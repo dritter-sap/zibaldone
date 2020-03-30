@@ -85,21 +85,44 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   }
 
   @Override
-  public void loadVertexProperties() {
-    // TODO
+  public void loadVertexProperties(final CSVParser records, final String[] vertexHeader, final String vertexKeyFieldName,
+                                   final BatchCoordinator bc, final Map<String, OVertex> vertices) {
+    try (ProgressBar pb = new ProgressBar("Vertices", vertices.size())) {
+      try (final ODatabaseSession session = pool.acquire()) {
+        bc.begin(session);
+        for (final CSVRecord record : records) {
+          final OVertex vertex = vertices.get(record.get(vertexKeyFieldName));
+          this.addVertexProperties(vertex, vertexHeader, record, vertexKeyFieldName);
+          vertices.remove(vertex.getProperty(vertexKeyFieldName));
+          bc.iterate(session, records.getRecordNumber(), pb);
+        }
+        bc.end(session);
+        pb.stepTo(vertices.size());
+      }
+      log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+    }
   }
 
   private OVertex createVertex(String odbVertexClassName, String[] vertexHeader, ODatabaseSession session,
                                CSVRecord record, String vertexKeyFieldName) {
     final OVertex vertex = session.newVertex(odbVertexClassName);
     for (int i=0; i<vertexHeader.length; i++) {
-      // FIXME: enable properties
       if (vertexHeader[i].equals(vertexKeyFieldName)) {
         setPropertyIfNotNullOrEmpty(vertex, vertexHeader[i], record.get(i));
       }
     }
     vertex.save();
     return vertex;
+  }
+
+  private void addVertexProperties(final OVertex vertex, final String[] vertexHeaders, final CSVRecord record,
+                                   final String vertexKeyFieldName) {
+    for (int i=0; i<vertexHeaders.length; i++) {
+      if (!vertexHeaders[i].equals(vertexKeyFieldName)) {
+        setPropertyIfNotNullOrEmpty(vertex, vertexHeaders[i], record.get(i));
+      }
+    }
+    vertex.save();
   }
 
   private void createEdge(String odbEdgeClassName, String[] edgeHeader, String edgeSrcKeyFieldName, String edgeTrgtKeyFieldName, Map<String, OVertex> vertices, ODatabaseSession session, CSVRecord record) {

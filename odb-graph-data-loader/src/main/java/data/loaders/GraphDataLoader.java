@@ -12,10 +12,11 @@ public interface GraphDataLoader {
   void disconnect(String dbName);
 
   Map<String, OVertex> loadVertexKeys(CSVParser records, String odbVertexClassName, String[] vertexHeader,
-                                      String vertexKeyFieldName, final BatchCoordinator bc, long numberVertices);
+                                      String vertexKeyFieldName, BatchCoordinator bc, long numberVertices);
 
   void loadEdges(CSVParser records, String odbEdgeClassName, String[] edgeHeader, String edgeSrcKeyFieldName,
                  String edgeTrgtKeyFieldName, Map<String, OVertex> vertices, BatchCoordinator bc, long expectedMax);
 
-  void loadVertexProperties();
+  void loadVertexProperties(CSVParser records, String[] vertexHeader, String vertexKeyFieldName, BatchCoordinator bc,
+                            Map<String, OVertex> vertices);
 }
