@@ -52,6 +52,7 @@ public class BatchCoordinator {
       for (final Map.Entry<String, OElement> tmp : batchLocal.entrySet()) {
         globalContext.put(tmp.getKey(), tmp.getValue().getIdentity());
       }
+      batchLocal.clear(); // reset batch local instances
       session.begin();
     }
   }

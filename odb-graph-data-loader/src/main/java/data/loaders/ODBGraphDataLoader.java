@@ -60,13 +60,11 @@ public class ODBGraphDataLoader implements GraphDataLoader {
           // vertices.put(record.get(vertexKeyFieldName), vertex);
           batchLocalVertices.put(record.get(vertexKeyFieldName), vertex);
           bc.iterateVertices(session, records.getRecordNumber(), pb, batchLocalVertices, vertices);
-          batchLocalVertices = new HashMap<>(); // reset batch local instances
         }
         bc.end(session);
         for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
           vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
         }
-        batchLocalVertices = null;
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
