@@ -2,6 +2,7 @@ import com.github.rvesse.airline.SingleCommand;
 import com.github.rvesse.airline.annotations.Cli;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.record.OVertex;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
@@ -117,7 +118,7 @@ public class MassGraphDataLoader {
     final BatchCoordinator bc = new BatchCoordinator(config.getBatchSize());
 
     dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password);
-    Map<String, OVertex> contextVertices = null;
+    Map<String, ORID> contextVertices = null;
     try {
       log.debug("loading vertex keys...");
       try (final Reader records = new FileReader(vertexFileName)) {
@@ -163,9 +164,9 @@ public class MassGraphDataLoader {
     try {
       log.debug("loading vertex keys...");
       try (final Reader reader = new FileReader(vertexFileName)) {
-        final List<String[]> records = parseFast(reader); // TODO: check stream / next record API
+        final List<String[]> records = parseFast(reader);
         final long start = System.currentTimeMillis();
-        contextVertices = dataLoader.loadVertexKeys(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
+        contextVertices = dataLoader.loadVertexKeys(records, "VertexClass", Big2graphFixture.VertexHeader,
             "UUID_NVARCHAR", bc, config.getNumberVertices());
         log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
       }
@@ -183,7 +184,8 @@ public class MassGraphDataLoader {
         // 'getRecords()' removes the records
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
-        dataLoader.loadVertexProperties();
+        dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
+            "UUID_NVARCHAR", bc, contextVertices);
         log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
       }
     } finally {

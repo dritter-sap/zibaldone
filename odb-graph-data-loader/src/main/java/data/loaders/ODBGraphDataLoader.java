@@ -2,8 +2,10 @@ package data.loaders;
 
 import com.orientechnologies.orient.core.config.OGlobalConfiguration;
 import com.orientechnologies.orient.core.db.*;
+import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.record.OEdge;
 import com.orientechnologies.orient.core.record.OElement;
+import com.orientechnologies.orient.core.record.ORecord;
 import com.orientechnologies.orient.core.record.OVertex;
 import data.MemoryUtils;
 import me.tongfei.progressbar.ProgressBar;
@@ -19,11 +21,11 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   private static final Logger log = LoggerFactory.getLogger(ODBGraphDataLoader.class);
 
   private OrientDB      orient;
-  private ODatabasePool pool; //pool not thread-safe
+  private ODatabasePool pool; // pool not thread-safe
 
   @Override
   public void connect(final String serverName, final Integer serverPort, final String dbName, final String userName,
-                      final String password) throws Exception {
+                      final String password) {
     log.debug("Connecting to " + serverName + ":" + serverPort + "(db=" + dbName + ")");
     final OrientDBConfigBuilder poolCfg = OrientDBConfig.builder();
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MIN, 5);
@@ -43,20 +45,28 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   }
 
   @Override
-  public Map<String, OVertex> loadVertexKeys(final CSVParser records, final String odbVertexClassName, final String[] vertexHeader,
-                                             final String vertexKeyFieldName, final BatchCoordinator bc, final long expectedMax) {
+  public Map<String, ORID> loadVertexKeys(final CSVParser records, final String odbVertexClassName,
+                                             final String[] vertexHeader, final String vertexKeyFieldName,
+                                             final BatchCoordinator bc, final long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
-      final Map<String, OVertex> vertices = new HashMap<>();
+      final Map<String, ORID> vertices = new HashMap<>();
       try (final ODatabaseSession session = pool.acquire()) {
         session.createVertexClass(odbVertexClassName);
 
+        Map<String, OElement> batchLocalVertices = new HashMap<>();
         bc.begin(session);
         for (final CSVRecord record : records) {
           final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record, vertexKeyFieldName);
-          vertices.put(record.get(vertexKeyFieldName), vertex);
-          bc.iterate(session, records.getRecordNumber(), pb);
+          // vertices.put(record.get(vertexKeyFieldName), vertex);
+          batchLocalVertices.put(record.get(vertexKeyFieldName), vertex);
+          bc.iterateVertices(session, records.getRecordNumber(), pb, batchLocalVertices, vertices);
+          batchLocalVertices = new HashMap<>(); // reset batch local instances
         }
         bc.end(session);
+        for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
+          vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
+        }
+        batchLocalVertices = null;
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
@@ -66,8 +76,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   @Override
   public void loadEdges(final CSVParser records, final String odbEdgeClassName, final String[] edgeHeader,
-                        final String edgeSrcKeyFieldName, final String edgeTrgtKeyFieldName, Map<String, OVertex> vertices,
-                        final BatchCoordinator bc, long expectedMax) {
+                        final String edgeSrcKeyFieldName, final String edgeTrgtKeyFieldName,
+                        final Map<String, ORID> vertices, final BatchCoordinator bc, long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Edges", expectedMax)) {
       try (final ODatabaseSession session = pool.acquire()) {
         session.createEdgeClass(odbEdgeClassName);
@@ -86,12 +96,13 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   @Override
   public void loadVertexProperties(final CSVParser records, final String[] vertexHeader, final String vertexKeyFieldName,
-                                   final BatchCoordinator bc, final Map<String, OVertex> vertices) {
+                                   final BatchCoordinator bc, final Map<String, ORID> vertices) {
     try (ProgressBar pb = new ProgressBar("Vertices", vertices.size())) {
       try (final ODatabaseSession session = pool.acquire()) {
         bc.begin(session);
         for (final CSVRecord record : records) {
-          final OVertex vertex = vertices.get(record.get(vertexKeyFieldName));
+          session.load(vertices.get(record.get(vertexKeyFieldName)));
+          final OVertex vertex = session.load(vertices.get(record.get(vertexKeyFieldName)));
           this.addVertexProperties(vertex, vertexHeader, record, vertexKeyFieldName);
           vertices.remove(vertex.getProperty(vertexKeyFieldName));
           bc.iterate(session, records.getRecordNumber(), pb);
@@ -125,10 +136,13 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     vertex.save();
   }
 
-  private void createEdge(String odbEdgeClassName, String[] edgeHeader, String edgeSrcKeyFieldName, String edgeTrgtKeyFieldName, Map<String, OVertex> vertices, ODatabaseSession session, CSVRecord record) {
+  private void createEdge(final String odbEdgeClassName, final String[] edgeHeader, final String edgeSrcKeyFieldName,
+                          final String edgeTrgtKeyFieldName, final Map<String, ORID> vertices,
+                          final ODatabaseSession session, final CSVRecord record) {
     final String src = record.get(edgeSrcKeyFieldName);
     final String trgt = record.get(edgeTrgtKeyFieldName);
-    final OEdge edge = session.newEdge(vertices.get(src), vertices.get(trgt), odbEdgeClassName);
+
+    final OEdge edge = session.newEdge(session.load(vertices.get(src)), session.load(vertices.get(trgt)), odbEdgeClassName);
     for (int i = 0; i < edgeHeader.length; i++) {
       setPropertyIfNotNullOrEmpty(edge, edgeHeader[i], record.get(i));
     }

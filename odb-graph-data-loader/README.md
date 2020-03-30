@@ -61,3 +61,4 @@ TODOs:
 - implement alternative approach
 - add stats: `SummaryStatistics`
 - add verification step: all vertices and edges created
+- `db.getMetadata().getIndexManager().getIndex("indexName").get(id)`
