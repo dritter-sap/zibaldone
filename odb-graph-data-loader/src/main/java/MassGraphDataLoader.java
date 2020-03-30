@@ -3,7 +3,6 @@ import com.github.rvesse.airline.annotations.Cli;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.orientechnologies.orient.core.id.ORID;
-import com.orientechnologies.orient.core.record.OVertex;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import data.fixtures.Big2graphFixture;
@@ -130,7 +129,7 @@ public class MassGraphDataLoader {
         log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
       }
       log.debug("loading edges...");
-      try (final Reader records = new FileReader(edgeFileName)){
+      try (final Reader records = new FileReader(edgeFileName)) {
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
         final long start = System.currentTimeMillis();
         dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
@@ -140,19 +139,21 @@ public class MassGraphDataLoader {
       }
       log.debug("loading vertex props...");
       try (final Reader records = new FileReader(vertexFileName)) {
-        // 'getRecords()' removes the records
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
         dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
             "UUID_NVARCHAR", bc, contextVertices);
         log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
       }
+      log.debug("Verify...");
+      final long start = System.currentTimeMillis();
+      dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
+          config.getNumberEdges());
+      log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
     } finally {
       dataLoader.disconnect(config.getDbName());
     }
   }
-
-  // TODO: validate 'select count(*) from `VertexClass`' and 'select count(*) from `EdgeClass`'
 
   /*public void processFast(final GraphDataLoader dataLoader, final GraphDataLoaderConfig config, final String userName,
                       final String password, final String vertexFileName, final String edgeFileName) throws Exception {

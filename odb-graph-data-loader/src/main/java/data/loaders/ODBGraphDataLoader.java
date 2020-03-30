@@ -5,8 +5,9 @@ import com.orientechnologies.orient.core.db.*;
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.record.OEdge;
 import com.orientechnologies.orient.core.record.OElement;
-import com.orientechnologies.orient.core.record.ORecord;
 import com.orientechnologies.orient.core.record.OVertex;
+import com.orientechnologies.orient.core.sql.executor.OResult;
+import com.orientechnologies.orient.core.sql.executor.OResultSet;
 import data.MemoryUtils;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVParser;
@@ -31,7 +32,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MIN, 5);
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MAX, 10);
     final OrientDBConfig oriendDBconfig = poolCfg.build();
-    orient = new OrientDB("remote:" + serverName, userName, password, oriendDBconfig);
+    orient = new OrientDB(serverName, userName, password, oriendDBconfig);
     orient.create(dbName, ODatabaseType.PLOCAL);
     pool = new ODatabasePool(orient, dbName, "admin", "admin", oriendDBconfig);
   }
@@ -65,6 +66,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
           vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
         }
+        batchLocalVertices.clear(); // reset batch local instances
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
@@ -109,6 +111,38 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         pb.stepTo(vertices.size());
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+    }
+  }
+
+  @Override
+  public void verify(final BatchCoordinator bc, final String vertexClass, final String edgeClass,
+                     final long expectedNumberVertices, final long expectedNumberEdges) {
+    try (final ProgressBar pb = new ProgressBar("Verification", 2)) {
+      try (final ODatabaseSession session = pool.acquire()) {
+        bc.begin(session);
+
+        OResultSet resultSet = session.query("select count(*) from `" + vertexClass + "`");
+        checkNumberElements(expectedNumberVertices, resultSet, "count(*)");
+        pb.step();
+        resultSet = session.query("select count(*) from `" + edgeClass + "`");
+        checkNumberElements(expectedNumberEdges, resultSet, "count(*)");
+        pb.step();
+
+        bc.end(session);
+      }
+      log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+    }
+  }
+
+  private void checkNumberElements(final long expectedNumberElements, final OResultSet resultSet, final String propertyName) {
+    if (resultSet.hasNext()) {
+      final OResult result = resultSet.next();
+      final long actualNumberElements = result.getProperty(propertyName);
+      if (actualNumberElements != expectedNumberElements) {
+        log.error("Vertices missing(expected {}, actual {})", expectedNumberElements, actualNumberElements);
+        return;
+      }
+      log.debug("All Elements loaded {} for {}", expectedNumberElements, propertyName);
     }
   }
 

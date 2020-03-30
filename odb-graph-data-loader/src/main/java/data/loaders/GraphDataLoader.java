@@ -18,4 +18,7 @@ public interface GraphDataLoader {
 
   void loadVertexProperties(CSVParser records, String[] vertexHeader, String vertexKeyFieldName, BatchCoordinator bc,
                             Map<String, ORID> vertices);
+
+  void verify(BatchCoordinator bc, final String vertexClass, final String edgeClass, long expectedNumberVertices,
+              long expectedNumberEdges);
 }

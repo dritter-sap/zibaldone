@@ -38,10 +38,10 @@ Alternatively, consider keeping smaller OVertex instances in memory at a time (k
 Evaluate on real-world data with 3.9 GB of node and 39.5 GB of edge data.
 OrientDB v3.0.24, Java 1.8:
 
-|                   | Time                    | Space(mem)   |
-|-------------------|-------------------------|--------------|
-| Nodes (23876665)  | 1979033 ms (~32.98 min) | 69,290.93 MB |
-| Edges (123953512) |                         |              |
+|                   | Time                    | Space-tool(mem)|
+|-------------------|-------------------------|----------------|
+| Nodes (23876665)  | 782771 ms (~13.02 min)  | 8,193.05 MB    |
+| Edges (123953512) |                         |                |
 
 ### Summary
 
@@ -58,7 +58,6 @@ Further interesting libraries?
 - launch4j: http://launch4j.sourceforge.net/index.html
 
 TODOs:
-- implement alternative approach
 - add stats: `SummaryStatistics`
-- add verification step: all vertices and edges created
 - `db.getMetadata().getIndexManager().getIndex("indexName").get(id)`
+- document node contains all outgoing edges, which increases the memory consumption
