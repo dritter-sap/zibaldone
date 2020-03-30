@@ -18,13 +18,11 @@
             <artifactId>orientdb-client</artifactId>
             <version>3.0.24</version> <!-- TODO: client <> server version should match 3.1.0-SNAPSHOT -->
         </dependency>
-
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-server</artifactId>
             <version>3.0.24</version>
         </dependency>
-
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-graphdb</artifactId>
