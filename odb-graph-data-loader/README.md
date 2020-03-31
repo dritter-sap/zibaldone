@@ -43,6 +43,11 @@ OrientDB v3.0.24, Java 1.8:
 | Nodes (23876665)  | 782771 ms (~13.02 min)  | 8,193.05 MB    |
 | Edges (123953512) |                         |                |
 
+**Usage**:
+```
+java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] -user <user> -password <passwd> -dbname <dbname> -vertexFileName <path-vertex>.csv -edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>]
+```
+
 ### Summary
 
 There are several different approaches to store large amounts of graph data into OrientDB.
