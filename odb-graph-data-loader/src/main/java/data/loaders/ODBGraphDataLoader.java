@@ -35,8 +35,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     if (serverName.startsWith("remote:")) {
       // remote:<host> can be called like that
       orient = new OrientDB(serverName, userName, password, oriendDBconfig);
-    } else if (serverName.startsWith("plocal:")) {
-      // plocal:/<path>/directory + server can be called like that
+    } else if (serverName.startsWith("embedded:")) {
+      // embedded:/<path>/directory + server can be called like that
       orient = new OrientDB(serverName, OrientDBConfig.defaultConfig());
     } else {
       throw new UnsupportedOperationException("Currently only 'plocal' and 'remote' are supported.");
