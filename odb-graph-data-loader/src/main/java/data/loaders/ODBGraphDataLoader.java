@@ -32,8 +32,15 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MIN, 5);
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MAX, 10);
     final OrientDBConfig oriendDBconfig = poolCfg.build();
-    // orient = new OrientDB(serverName, userName, password, oriendDBconfig);
-    orient = new OrientDB(serverName, OrientDBConfig.defaultConfig());
+    if (serverName.startsWith("remote:")) {
+      // remote:<host> can be called like that
+      orient = new OrientDB(serverName, userName, password, oriendDBconfig);
+    } else if (serverName.startsWith("plocal:")) {
+      // plocal:/<path>/directory + server can be called like that
+      orient = new OrientDB(serverName, OrientDBConfig.defaultConfig());
+    } else {
+      throw new UnsupportedOperationException("Currently only 'plocal' and 'remote' are supported.");
+    }
     orient.create(dbName, ODatabaseType.PLOCAL);
     pool = new ODatabasePool(orient, dbName, "admin", "admin", oriendDBconfig);
   }
