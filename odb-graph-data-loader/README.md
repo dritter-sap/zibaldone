@@ -45,7 +45,9 @@ OrientDB v3.0.24, Java 1.8:
 
 **Usage**:
 ```
-java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] -user <user> -password <passwd> -dbname <dbname> -vertexFileName <path-vertex>.csv -edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>]
+java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
+-user <user> -password <passwd> -dbname <dbname> -vertexFileName <path-vertex>.csv \
+-edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>]
 ```
 
 ### Summary
