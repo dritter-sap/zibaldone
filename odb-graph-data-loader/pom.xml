@@ -11,24 +11,28 @@
 
     <artifactId>odb-graph-data-loader</artifactId>
 
+    <properties>
+        <com.orientechnologies.version>3.0.30</com.orientechnologies.version>
+    </properties>
+
     <dependencies>
         <!-- orient db -->
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-client</artifactId>
-            <version>3.0.24</version> <!-- TODO: client <> server version should match 3.1.0-SNAPSHOT -->
+            <version>${com.orientechnologies.version}</version> <!-- TODO: client <> server version should match 3.1.0-SNAPSHOT -->
         </dependency>
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-graphdb</artifactId>
-            <version>3.0.24</version>
+            <version>${com.orientechnologies.version}</version>
         </dependency>
 
         <!-- required for plocal -->
         <dependency>
             <groupId>com.orientechnologies</groupId>
             <artifactId>orientdb-server</artifactId>
-            <version>3.0.24</version>
+            <version>${com.orientechnologies.version}</version>
         </dependency>
 
         <!-- csv -->
