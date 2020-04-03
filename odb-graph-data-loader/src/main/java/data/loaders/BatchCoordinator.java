@@ -4,10 +4,12 @@ import com.orientechnologies.orient.core.db.ODatabaseSession;
 import com.orientechnologies.orient.core.id.ORID;
 import com.orientechnologies.orient.core.record.OElement;
 import data.MemoryUtils;
+import data.utils.FileHashMap;
 import me.tongfei.progressbar.ProgressBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class BatchCoordinator {
@@ -51,6 +53,11 @@ public class BatchCoordinator {
         globalContext.put(tmp.getKey(), tmp.getValue().getIdentity());
       }
       batchLocal.clear(); // reset batch local instances
+      try {
+        ((FileHashMap) globalContext).save();
+      } catch (final IOException e) {
+        throw new IllegalStateException(e);
+      }
       session.begin();
     }
   }

@@ -84,6 +84,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
       pb.setExtraMessage("Saving file map values");
       vertices.save();
+      MemoryUtils.freeMemory();
       return vertices;
     } catch (final IOException e) {
       throw new IllegalStateException(e);
@@ -105,8 +106,9 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         }
         bc.end(session);
         pb.stepTo(expectedMax);
-        log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
       }
+      MemoryUtils.freeMemory();
+      log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
     }
   }
 
@@ -126,6 +128,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         bc.end(session);
         pb.stepTo(vertices.size());
       }
+      MemoryUtils.freeMemory();
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
     }
   }
