@@ -48,16 +48,16 @@ public class BatchCoordinator {
       pb.stepBy(batchSize);
       if (recordNumber % (batchSize * 100) == 0) {
         pb.setExtraMessage("Mem(used/max)" + MemoryUtils.usedMemoryInMB() + "/" + MemoryUtils.maxMemoryInMB());
+        try {
+          ((FileHashMap) globalContext).save();
+        } catch (final IOException e) {
+          throw new IllegalStateException(e);
+        }
       }
       for (final Map.Entry<String, OElement> tmp : batchLocal.entrySet()) {
         globalContext.put(tmp.getKey(), tmp.getValue().getIdentity());
       }
       batchLocal.clear(); // reset batch local instances
-      try {
-        ((FileHashMap) globalContext).save();
-      } catch (final IOException e) {
-        throw new IllegalStateException(e);
-      }
       session.begin();
     }
   }
