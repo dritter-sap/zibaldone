@@ -63,8 +63,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                              final BatchCoordinator bc, final long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
       // final Map<String, ORID> vertices = new HashMap<>();
-      // final FileHashMap<String, ORID> vertices = new FileHashMap<>(System.getProperty("java.io.tmpdir") + "/odb");
-      final FileHashMap<String, ORID> vertices = new FileHashMap<>("/tmp/odb", 0);
+      final FileHashMap<String, ORID> vertices = new FileHashMap<>(System.getProperty("java.io.tmpdir") + "/odb/odb", 0);
+      // final FileHashMap<String, ORID> vertices = new FileHashMap<>("/tmp/odb", 0);
       try (final ODatabaseSession session = pool.acquire()) {
         session.createVertexClass(odbVertexClassName);
 
