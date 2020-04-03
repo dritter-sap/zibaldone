@@ -9,12 +9,14 @@ import com.orientechnologies.orient.core.record.OVertex;
 import com.orientechnologies.orient.core.sql.executor.OResult;
 import com.orientechnologies.orient.core.sql.executor.OResultSet;
 import data.MemoryUtils;
+import data.utils.FileHashMap;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,27 +60,31 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                              final String[] vertexHeader, final String vertexKeyFieldName,
                                              final BatchCoordinator bc, final long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
-      final Map<String, ORID> vertices = new HashMap<>();
+      // final Map<String, ORID> vertices = new HashMap<>();
+      final FileHashMap<String, ORID> vertices = new FileHashMap<>(System.getProperty("java.io.tmpdir") + "/odb");
       try (final ODatabaseSession session = pool.acquire()) {
-        //TODO session.createVertexClass(odbVertexClassName);
+        session.createVertexClass(odbVertexClassName);
 
         final Map<String, OElement> batchLocalVertices = new HashMap<>();
-        //TODO bc.begin(session);
+        bc.begin(session);
         for (final CSVRecord record : records) {
-          //TODO final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record, vertexKeyFieldName);
+          final OVertex vertex = createVertex(odbVertexClassName, vertexHeader, session, record, vertexKeyFieldName);
           // vertices.put(record.get(vertexKeyFieldName), vertex);
-          //TODO batchLocalVertices.put(record.get(vertexKeyFieldName), vertex);
+          batchLocalVertices.put(record.get(vertexKeyFieldName), vertex);
           bc.iterateVertices(session, records.getRecordNumber(), pb, batchLocalVertices, vertices);
         }
-        //TODO bc.end(session);
-        //TODO for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
-        //TODO   vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
-        //TODO }
-        //TODO batchLocalVertices.clear(); // reset batch local instances
+        bc.end(session);
+        for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
+          vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
+        }
+        batchLocalVertices.clear(); // reset batch local instances
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+      vertices.save();
       return vertices;
+    } catch (final IOException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -88,14 +94,14 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                         final Map<String, ORID> vertices, final BatchCoordinator bc, long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Edges", expectedMax)) {
       try (final ODatabaseSession session = pool.acquire()) {
-        //TODO session.createEdgeClass(odbEdgeClassName);
+        session.createEdgeClass(odbEdgeClassName);
 
-        //TODO bc.begin(session);
+        bc.begin(session);
         for (final CSVRecord record : records) {
-        //TODO   this.createEdge(odbEdgeClassName, edgeHeader, edgeSrcKeyFieldName, edgeTrgtKeyFieldName, vertices, session, record);
+          this.createEdge(odbEdgeClassName, edgeHeader, edgeSrcKeyFieldName, edgeTrgtKeyFieldName, vertices, session, record);
           bc.iterate(session, records.getRecordNumber(), pb);
         }
-      //TODO bc.end(session);
+        bc.end(session);
         pb.stepTo(expectedMax);
         log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
       }
@@ -107,15 +113,15 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                    final BatchCoordinator bc, final Map<String, ORID> vertices) {
     try (ProgressBar pb = new ProgressBar("Vertices", vertices.size())) {
       try (final ODatabaseSession session = pool.acquire()) {
-        //TODO bc.begin(session);
+        bc.begin(session);
         for (final CSVRecord record : records) {
-          //TODO session.load(vertices.get(record.get(vertexKeyFieldName)));
-          //TODO final OVertex vertex = session.load(vertices.get(record.get(vertexKeyFieldName)));
-          //TODO this.addVertexProperties(vertex, vertexHeader, record, vertexKeyFieldName);
-          //TODO vertices.remove(vertex.getProperty(vertexKeyFieldName));
+          session.load(vertices.get(record.get(vertexKeyFieldName)));
+          final OVertex vertex = session.load(vertices.get(record.get(vertexKeyFieldName)));
+          this.addVertexProperties(vertex, vertexHeader, record, vertexKeyFieldName);
+          vertices.remove(vertex.getProperty(vertexKeyFieldName));
           bc.iterate(session, records.getRecordNumber(), pb);
         }
-        //TODO bc.end(session);
+        bc.end(session);
         pb.stepTo(vertices.size());
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
