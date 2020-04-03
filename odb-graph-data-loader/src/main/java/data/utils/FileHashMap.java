@@ -784,11 +784,6 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
                             Private Class Data
     \*----------------------------------------------------------------------*/
 
-  /**
-   * For log messages
-   */
-  private static final Logger log = LoggerFactory.getLogger(FileHashMap.class);
-
     /*----------------------------------------------------------------------*\
                                Constructors
     \*----------------------------------------------------------------------*/
@@ -1028,7 +1023,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     catch (IOException ex)
     {
-      log.error("Error during finalize", ex);
+      //log.error("Error during finalize", ex);
     }
 
     super.finalize();
@@ -1058,9 +1053,9 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     catch (IOException ex)
     {
-      log.error ("Failed to truncate FileHashMap file \"" +
-              valuesDBPath.getPath() + "\"",
-          ex);
+      //log.error ("Failed to truncate FileHashMap file \"" +
+      //        valuesDBPath.getPath() + "\"",
+      //    ex);
       valid = false;
     }
   }
@@ -1388,13 +1383,13 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
         // Have to recalculate gaps, since we may be able to coalesce
         // this returned space with ones to either side of it.
 
-        log.debug ("Removed value for key \"" +
-            key +
-            "\" at pos=" +
-            entry.getFilePosition() +
-            ", size=" +
-            entry.getObjectSize() +
-            ". Re-figuring gaps.");
+        //log.debug ("Removed value for key \"" +
+        //    key +
+        //    "\" at pos=" +
+        //    entry.getFilePosition() +
+        //    ", size=" +
+        //    entry.getObjectSize() +
+        //    ". Re-figuring gaps.");
         findFileGaps();
       }
     }
@@ -1511,7 +1506,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    */
   private void findFileGaps()
   {
-    log.debug ("Looking for file gaps.");
+    //log.debug ("Looking for file gaps.");
 
     if (fileGaps == null)
       fileGaps = new TreeSet<FileHashMapEntry<K>> (new FileHashMapEntryGapComparator());
@@ -1534,9 +1529,9 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       {
         // There's a gap at the beginning.
 
-        log.debug ("First entry is at pos " + pos + ", size=" + size);
+        //log.debug ("First entry is at pos " + pos + ", size=" + size);
         size = (int) pos;
-        log.debug ("Gap at position 0 of size " + size);
+        //log.debug ("Gap at position 0 of size " + size);
         fileGaps.add (new FileHashMapEntry<K> ((long) 0, size));
       }
 
@@ -1555,8 +1550,8 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
         {
           int gapSize = (int) (pos - possibleGapPos);
 
-          log.debug ("Gap at position " + possibleGapPos +
-              " of size " + gapSize);
+          //log.debug ("Gap at position " + possibleGapPos +
+          //    " of size " + gapSize);
           fileGaps.add (new FileHashMapEntry<K> (possibleGapPos,
               gapSize));
         }
@@ -1714,7 +1709,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     objStream.writeObject (VERSION_STAMP);
     objStream.writeObject (indexMap);
 
-    if (log.isDebugEnabled())
+    /*if (log.isDebugEnabled())
     {
       List<FileHashMapEntry<K>> entries = getSortedEntries();
 
@@ -1727,7 +1722,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
         log.debug ("    pos=" + pos + ", size=" + size);
       }
-    }
+    }*/
   }
 
   /**
@@ -1794,7 +1789,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   {
     long result = -1;
 
-    log.debug ("Finding smallest gap for " + objectSize + "-byte object");
+    //log.debug ("Finding smallest gap for " + objectSize + "-byte object");
 
     assert (fileGaps != null);
     for (Iterator<FileHashMapEntry<K>> it = fileGaps.iterator();
@@ -1805,16 +1800,16 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       long pos  = gap.getFilePosition();
       int  size = gap.getObjectSize();
 
-      log.debug ("Gap: pos=" + pos + ", size=" + size);
+      //.debug ("Gap: pos=" + pos + ", size=" + size);
       if (size >= objectSize)
       {
-        log.debug ("Found it.");
+        //log.debug ("Found it.");
         result = pos;
 
         if (size > objectSize)
         {
-          log.debug ("Gap size is larger than required. Making " +
-              "smaller gap.");
+          //log.debug ("Gap size is larger than required. Making " +
+          //    "smaller gap.");
 
           // Remove it and re-insert it, since the gap list is
           // sorted by size.
@@ -1826,8 +1821,8 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
           gap.setFilePosition (pos);
           gap.setObjectSize (size);
 
-          log.debug ("Saving new, smaller gap: pos=" + pos +
-              ", size=" + size);
+          //log.debug ("Saving new, smaller gap: pos=" + pos +
+          //    ", size=" + size);
 
           fileGaps.add (gap);
         }
@@ -1836,7 +1831,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       }
     }
 
-    log.debug ("findBestFitGap: returning " + result);
+    //log.debug ("findBestFitGap: returning " + result);
     return result;
   }
 
