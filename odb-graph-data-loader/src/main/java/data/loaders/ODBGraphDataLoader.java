@@ -10,6 +10,8 @@ import com.orientechnologies.orient.core.sql.executor.OResult;
 import com.orientechnologies.orient.core.sql.executor.OResultSet;
 import data.MemoryUtils;
 import data.utils.FileHashMap;
+import data.utils.ObjectExistsException;
+import data.utils.VersionMismatchException;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -61,7 +63,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                              final BatchCoordinator bc, final long expectedMax) {
     try (ProgressBar pb = new ProgressBar("Vertices", expectedMax)) {
       // final Map<String, ORID> vertices = new HashMap<>();
-      final FileHashMap<String, ORID> vertices = new FileHashMap<>(System.getProperty("java.io.tmpdir") + "/odb");
+      // final FileHashMap<String, ORID> vertices = new FileHashMap<>(System.getProperty("java.io.tmpdir") + "/odb");
+      final FileHashMap<String, ORID> vertices = new FileHashMap<>("/tmp/odb", 0);
       try (final ODatabaseSession session = pool.acquire()) {
         session.createVertexClass(odbVertexClassName);
 
@@ -87,6 +90,12 @@ public class ODBGraphDataLoader implements GraphDataLoader {
       MemoryUtils.freeMemory();
       return vertices;
     } catch (final IOException e) {
+      throw new IllegalStateException(e);
+    } catch (ObjectExistsException e) {
+      throw new IllegalStateException(e);
+    } catch (VersionMismatchException e) {
+      throw new IllegalStateException(e);
+    } catch (ClassNotFoundException e) {
       throw new IllegalStateException(e);
     }
   }
