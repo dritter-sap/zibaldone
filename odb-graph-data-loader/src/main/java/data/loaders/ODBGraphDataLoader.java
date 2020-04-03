@@ -191,7 +191,8 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   private void setPropertyIfNotNullOrEmpty(final OElement element, final String header, final String value) {
     if (null != value && !value.isEmpty()) {
-      element.setProperty(header, value);
+      // TODO: add elements later
+      // element.setProperty(header, value);
     }
   }
 }

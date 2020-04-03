@@ -48,6 +48,12 @@
             <version>2.8.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.externalsortinginjava</groupId>
+            <artifactId>externalsortinginjava</artifactId>
+            <version>[0.1.9,)</version>
+        </dependency>
+
         <!-- Airline -->
         <dependency>
             <groupId>com.github.rvesse</groupId>
