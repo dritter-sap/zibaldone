@@ -42,16 +42,16 @@ public class BatchCoordinator {
   public void iterateVertices(final ODatabaseSession session, final long recordNumber, final ProgressBar pb,
                       Map<String, OElement> batchLocal, Map<String, ORID> globalContext) {
     if (recordNumber % batchSize == 0) {
-      //TODO session.commit();
+      session.commit();
       pb.stepBy(batchSize);
       if (recordNumber % (batchSize * 100) == 0) {
         pb.setExtraMessage("Mem(used/max)" + MemoryUtils.usedMemoryInMB() + "/" + MemoryUtils.maxMemoryInMB());
       }
-      //TODO for (final Map.Entry<String, OElement> tmp : batchLocal.entrySet()) {
-      //TODO   globalContext.put(tmp.getKey(), tmp.getValue().getIdentity());
-      //TODO }
-      //TODO batchLocal.clear(); // reset batch local instances
-      //TODO session.begin();
+      for (final Map.Entry<String, OElement> tmp : batchLocal.entrySet()) {
+        globalContext.put(tmp.getKey(), tmp.getValue().getIdentity());
+      }
+      batchLocal.clear(); // reset batch local instances
+      session.begin();
     }
   }
 }

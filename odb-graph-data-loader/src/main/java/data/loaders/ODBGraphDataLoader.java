@@ -77,10 +77,12 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         for (final Map.Entry<String, OElement> tmp : batchLocalVertices.entrySet()) {
           vertices.put(tmp.getKey(), tmp.getValue().getIdentity());
         }
+        pb.setExtraMessage("Clearing batch local");
         batchLocalVertices.clear(); // reset batch local instances
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+      pb.setExtraMessage("Saving file map values");
       vertices.save();
       return vertices;
     } catch (final IOException e) {
