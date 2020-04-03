@@ -12,7 +12,7 @@
     <artifactId>odb-graph-data-loader</artifactId>
 
     <properties>
-        <com.orientechnologies.version>3.1.0-SNAPSHOT</com.orientechnologies.version>
+        <com.orientechnologies.version>3.0.31-SNAPSHOT</com.orientechnologies.version>
     </properties>
 
     <dependencies>
