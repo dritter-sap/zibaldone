@@ -1,8 +1,5 @@
 package data.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -31,7 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class FileHashMap<K,V> extends AbstractMap<K,V>
+public class TransientKeyPersistentValueMap<K,V> extends AbstractMap<K,V>
 {
     /*----------------------------------------------------------------------*\
                              Public Constants
@@ -79,11 +76,11 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * the file, whenever possible. If this flag is not specified, then the
    * space occupied by objects removed from the hash table is not
    * reclaimed. This flag is not persistent. It's possible to create a
-   * persistent <tt>FileHashMap</tt> without using this flag, and later
-   * reopen the on-disk map via a new <tt>FileHashMap</tt> object that
+   * persistent <tt>TransientKeyPersistentValueMap</tt> without using this flag, and later
+   * reopen the on-disk map via a new <tt>TransientKeyPersistentValueMap</tt> object that
    * does have this flag set. Whenever the flag is set, the in-memory
-   * <tt>FileHashMap</tt> object attempts to reuse gaps in the file. When
-   * the flag is not set, the in-memory <tt>FileHashMap</tt> object
+   * <tt>TransientKeyPersistentValueMap</tt> object attempts to reuse gaps in the file. When
+   * the flag is not set, the in-memory <tt>TransientKeyPersistentValueMap</tt> object
    * ignores gaps in the file.
    */
   public static final int RECLAIM_FILE_GAPS = 0x08;
@@ -97,7 +94,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * and older incompatible versions.
    */
   private static final String VERSION_STAMP =
-      "org.clapper.util.misc.FileHashMap-1.0";
+      "org.clapper.util.misc.TransientKeyPersistentValueMap-1.0";
 
   /**
    * Used to validate the set of flags passed to the constructor. Negate
@@ -142,18 +139,18 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Comparator for FileHashMapEntry objects. Sorts by natural order,
+   * Comparator for TransientKeyPersistentValueMapEntry objects. Sorts by natural order,
    * which is file position.
    */
   private class FileHashMapEntryComparator
-      implements Comparator<FileHashMapEntry<K>>
+      implements Comparator<TransientKeyPersistentValueMapEntry<K>>
   {
     private FileHashMapEntryComparator()
     {
       // Nothing to do
     }
 
-    public int compare (FileHashMapEntry<K> o1, FileHashMapEntry<K> o2)
+    public int compare (TransientKeyPersistentValueMapEntry<K> o1, TransientKeyPersistentValueMapEntry<K> o2)
     {
       return o1.compareTo (o2);
     }
@@ -176,18 +173,18 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Comparator for FileHashMapEntry objects. Sorts by object size, then
+   * Comparator for TransientKeyPersistentValueMapEntry objects. Sorts by object size, then
    * file position. Used for ordering gap entries.
    */
   private class FileHashMapEntryGapComparator
-      implements Comparator<FileHashMapEntry<K>>
+      implements Comparator<TransientKeyPersistentValueMapEntry<K>>
   {
     private FileHashMapEntryGapComparator()
     {
       // Nothing to do
     }
 
-    public int compare (FileHashMapEntry<K> o1, FileHashMapEntry<K> o2)
+    public int compare (TransientKeyPersistentValueMapEntry<K> o1, TransientKeyPersistentValueMapEntry<K> o2)
     {
       int cmp;
 
@@ -215,14 +212,14 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Internal iterator that loops through the FileHashMapEntry objects in
+   * Internal iterator that loops through the TransientKeyPersistentValueMapEntry objects in
    * sorted order, by file position. Used to implement other iterators.
    */
-  private class EntryIterator implements Iterator<FileHashMapEntry<K>>
+  private class EntryIterator implements Iterator<TransientKeyPersistentValueMapEntry<K>>
   {
-    List<FileHashMapEntry<K>>     entries;
-    Iterator<FileHashMapEntry<K>> iterator;
-    FileHashMapEntry<K>           currentEntry = null;
+    List<TransientKeyPersistentValueMapEntry<K>>     entries;
+    Iterator<TransientKeyPersistentValueMapEntry<K>> iterator;
+    TransientKeyPersistentValueMapEntry<K> currentEntry = null;
 
     /**
      * The expectedSize value that the iterator believes that the backing
@@ -233,7 +230,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     EntryIterator()
     {
-      entries      = FileHashMap.this.getSortedEntries();
+      entries      = TransientKeyPersistentValueMap.this.getSortedEntries();
       iterator     = entries.iterator();
       expectedSize = entries.size();
     }
@@ -243,9 +240,9 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       return iterator.hasNext();
     }
 
-    public FileHashMapEntry<K> next()
+    public TransientKeyPersistentValueMapEntry<K> next()
     {
-      if (expectedSize != FileHashMap.this.indexMap.size())
+      if (expectedSize != TransientKeyPersistentValueMap.this.indexMap.size())
         throw new ConcurrentModificationException();
 
       if (hasNext())
@@ -265,7 +262,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       if ((currentEntry != null) && (expectedSize > 0))
       {
         K key = currentEntry.getKey();
-        V value = FileHashMap.this.remove (key);
+        V value = TransientKeyPersistentValueMap.this.remove (key);
         if (value != null)
         {
           if (hasNext())
@@ -279,14 +276,13 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * Specialized iterator for looping through the value set. The iterator
-   * loops through the FileHashMapEntry items, which have been sorted by
+   * loops through the TransientKeyPersistentValueMapEntry items, which have been sorted by
    * file position; each call to next() causes the iterator to load the
    * appropriate value. This approach (a) iterates through the value file
    * sequentially, and (b) demand-loads the values, so they're not all
    * loaded into memory at the same time.
    */
-  private class ValueIterator implements Iterator<V>
-  {
+  private class ValueIterator implements Iterator<V> {
     EntryIterator it;
 
     private ValueIterator()
@@ -301,7 +297,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public V next()
     {
-      return FileHashMap.this.readValueNoError (it.next());
+      return TransientKeyPersistentValueMap.this.readValueNoError (it.next());
     }
 
     public void remove()
@@ -316,7 +312,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    */
   private class ValueSet extends AbstractSet<V>
   {
-    ValuesFile valuesDB = FileHashMap.this.valuesDB;
+    ValuesFile valuesDB = TransientKeyPersistentValueMap.this.valuesDB;
 
     private ValueSet()
     {
@@ -410,7 +406,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public boolean remove (Object o)
     {
-      return (FileHashMap.this.remove (o) != null);
+      return (TransientKeyPersistentValueMap.this.remove (o) != null);
     }
 
     public int size()
@@ -433,15 +429,15 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * Necessary to support the Map.entrySet() routine. Each object
-   * returned by FileHashMap.entrySet().iterator() is of this type. Each
+   * returned by TransientKeyPersistentValueMap.entrySet().iterator() is of this type. Each
    * EntrySetEntry object provides an alternate, user-acceptable view of
-   * a FileHashMapEntry.
+   * a TransientKeyPersistentValueMapEntry.
    */
   private class EntrySetEntry implements Map.Entry<K,V>
   {
-    private FileHashMapEntry<K> entry;
+    private TransientKeyPersistentValueMapEntry<K> entry;
 
-    EntrySetEntry (FileHashMapEntry<K> entry)
+    EntrySetEntry (TransientKeyPersistentValueMapEntry<K> entry)
     {
       this.entry = entry;
     }
@@ -468,7 +464,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public V getValue()
     {
-      return FileHashMap.this.readValueNoError (entry);
+      return TransientKeyPersistentValueMap.this.readValueNoError (entry);
     }
 
     public int hashCode()
@@ -489,7 +485,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * The actual entry set returned by FileHashMap.entrySet(). The values
+   * The actual entry set returned by TransientKeyPersistentValueMap.entrySet(). The values
    * are demand-loaded. The iterator() and toArray() methods ensure that
    * the keys are returned in an order that causes sequential access to the
    * values file.
@@ -508,7 +504,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public boolean contains (Map.Entry<K,V> o)
     {
-      return FileHashMap.this.containsValue(o.getValue());
+      return TransientKeyPersistentValueMap.this.containsValue(o.getValue());
     }
 
     public Iterator<Map.Entry<K,V>> iterator()
@@ -549,7 +545,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       return super.hashCode();
     }
 
-    public boolean remove (FileHashMapEntry<K> o)
+    public boolean remove (TransientKeyPersistentValueMapEntry<K> o)
     {
       throw new UnsupportedOperationException();
     }
@@ -566,14 +562,14 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public int size()
     {
-      return FileHashMap.this.size();
+      return TransientKeyPersistentValueMap.this.size();
     }
   }
 
   /**
    * Specialized iterator for looping through the set returned by
-   * FileHashMap.keySet(). The iterator returns the keys so that their
-   * corresponding FileHashMapEntry objects are sorted by file position
+   * TransientKeyPersistentValueMap.keySet(). The iterator returns the keys so that their
+   * corresponding TransientKeyPersistentValueMapEntry objects are sorted by file position
    * value. This approach optimizes the following type of use:
    *
    *     Iterator it = fileHashMap.keySet().iterator();
@@ -583,8 +579,8 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    *         ...
    *     }
    *
-   * That is, each key corresponds to a FileHashMapEntry, and since the
-   * keys are ordered by FileHashMapEntry file pointer, the above loop
+   * That is, each key corresponds to a TransientKeyPersistentValueMapEntry, and since the
+   * keys are ordered by TransientKeyPersistentValueMapEntry file pointer, the above loop
    * will traverse the data file sequentially.
    */
   private class KeyIterator implements Iterator<K>
@@ -614,7 +610,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * Implements a key set -- the set of keys the caller used to store
-   * values in the FileHashMap. The iterator() and toArray() methods ensure
+   * values in the TransientKeyPersistentValueMap. The iterator() and toArray() methods ensure
    * that the keys are returned in a manner that optimizes looping through
    * the associated values (as with the various iterators, above).
    */
@@ -634,7 +630,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public boolean contains (Object o)
     {
-      return FileHashMap.this.indexMap.containsKey (o);
+      return TransientKeyPersistentValueMap.this.indexMap.containsKey (o);
     }
 
     public boolean containsAll (Collection c)
@@ -643,7 +639,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       Iterator it       = c.iterator();
 
       while (contains && it.hasNext())
-        contains = FileHashMap.this.indexMap.containsKey (it.next());
+        contains = TransientKeyPersistentValueMap.this.indexMap.containsKey (it.next());
 
       return contains;
     }
@@ -652,7 +648,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     {
       Set<K>   so        = (Set<K>) o;
       boolean  eq        = false;
-      Set<K>   myKeys    = FileHashMap.this.indexMap.keySet();
+      Set<K>   myKeys    = TransientKeyPersistentValueMap.this.indexMap.keySet();
 
       if (so.size() == myKeys.size())
       {
@@ -672,12 +668,12 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public int hashCode()
     {
-      return FileHashMap.this.indexMap.keySet().hashCode();
+      return TransientKeyPersistentValueMap.this.indexMap.keySet().hashCode();
     }
 
     public boolean isEmpty()
     {
-      return FileHashMap.this.indexMap.isEmpty();
+      return TransientKeyPersistentValueMap.this.indexMap.isEmpty();
     }
 
     public Iterator<K> iterator()
@@ -702,18 +698,18 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     public int size()
     {
-      return FileHashMap.this.currentSize();
+      return TransientKeyPersistentValueMap.this.currentSize();
     }
 
     private synchronized void loadKeyArray()
     {
       if (keys == null)
       {
-        List<FileHashMapEntry<K>> entries;
+        List<TransientKeyPersistentValueMapEntry<K>> entries;
 
-        entries = FileHashMap.this.getSortedEntries();
+        entries = TransientKeyPersistentValueMap.this.getSortedEntries();
         keys = new ArrayList<K>();
-        for (FileHashMapEntry<K> entry : entries)
+        for (TransientKeyPersistentValueMapEntry<K> entry : entries)
           keys.add (entry.getKey());
       }
     }
@@ -725,10 +721,10 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * The index, cached in memory. Each entry in the list is a
-   * FileHashMapEntry object. This index is stored on disk, in the index
+   * TransientKeyPersistentValueMapEntry object. This index is stored on disk, in the index
    * file.
    */
-  private HashMap<K, FileHashMapEntry<K>> indexMap = null;
+  private HashMap<K, TransientKeyPersistentValueMapEntry<K>> indexMap = null;
 
   /**
    * The file prefix with which this object was created.
@@ -774,11 +770,11 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * A set of gaps in the file, ordered sequentially by file position.
-   * Each entry in the set is a FileHashMapEntry with no associated
+   * Each entry in the set is a TransientKeyPersistentValueMapEntry with no associated
    * object or key. This reference will be non-null only if the
    * RECLAIM_FILE_GAPS flag was passed to the constructor.
    */
-  private TreeSet<FileHashMapEntry<K>> fileGaps = null;
+  private TreeSet<TransientKeyPersistentValueMapEntry<K>> fileGaps = null;
 
     /*----------------------------------------------------------------------*\
                             Private Class Data
@@ -789,12 +785,12 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     \*----------------------------------------------------------------------*/
 
   /**
-   * <p>Create a new transient <tt>FileHashMap</tt> object. The transient
+   * <p>Create a new transient <tt>TransientKeyPersistentValueMap</tt> object. The transient
    * disk files will be in the normal temporary directory and will have
-   * the prefix "FileHashMap". The names of the associated disk files are
+   * the prefix "TransientKeyPersistentValueMap". The names of the associated disk files are
    * guaranteed to be unique, and will go away when the object is
    * finalized or when the Java VM goes away. Call this constructor is
-   * identical to calling {@link #FileHashMap(String)} with a null
+   * identical to calling {@link #TransientKeyPersistentValueMap(String)} with a null
    * <tt>filePrefix</tt> parameter.</p>
    *
    * <p>Note that this constructor implicitly sets the {@link #TRANSIENT}
@@ -802,17 +798,17 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    *
    * @throws IOException  Unable to create temp file
    *
-   * @see #FileHashMap(String,int)
-   * @see #FileHashMap(String)
+   * @see #TransientKeyPersistentValueMap(String,int)
+   * @see #TransientKeyPersistentValueMap(String)
    */
-  public FileHashMap()
+  public TransientKeyPersistentValueMap()
       throws IOException
   {
     this (null);
   }
 
   /**
-   * <p>Create a new transient <tt>FileHashMap</tt> object. The transient
+   * <p>Create a new transient <tt>TransientKeyPersistentValueMap</tt> object. The transient
    * disk files will be in the normal temporary directory and will have
    * the specified temporary file prefix. If no temporary file prefix is
    * specified (i.e., the <tt>tempFilePrefix</tt> parameter is null), then
@@ -828,10 +824,10 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    *
    * @throws IOException  Unable to create temp file
    *
-   * @see #FileHashMap(String,int)
-   * @see #FileHashMap()
+   * @see #TransientKeyPersistentValueMap(String,int)
+   * @see #TransientKeyPersistentValueMap()
    */
-  public FileHashMap (String tempFilePrefix)
+  public TransientKeyPersistentValueMap(String tempFilePrefix)
       throws IOException
   {
     this.flags = TRANSIENT;
@@ -847,7 +843,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * <p>Create a new <tt>FileHashMap</tt> object that will read its data
+   * <p>Create a new <tt>TransientKeyPersistentValueMap</tt> object that will read its data
    * from and/or store its data in files derived from the specified
    * prefix. The prefix is a file prefix onto which data and index
    * suffixes will be appended.</p>
@@ -870,20 +866,20 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * causes any <tt>NO_CREATE</tt> flag to be ignored.</p>
    *
    * <p>For example, the following statement creates a transient
-   * <tt>FileHashMap</tt>:</p>
+   * <tt>TransientKeyPersistentValueMap</tt>:</p>
    *
    * <blockquote><pre>
    * {@code
-   * Map map = new FileHashMap ("/my/temp/dir", FileHashMap.TRANSIENT);
+   * Map map = new TransientKeyPersistentValueMap ("/my/temp/dir", TransientKeyPersistentValueMap.TRANSIENT);
    * }
    * </pre></blockquote>
    *
-   * <p>whereas this statements opens a persistent <tt>FileHashMap</tt>,
+   * <p>whereas this statements opens a persistent <tt>TransientKeyPersistentValueMap</tt>,
    * creating it if it doesn't already exist:</p>
    *
    * <blockquote><pre>
    * {@code
-   * Map map = new FileHashMap ("/my/map/dir", FileHashMap.CREATE);
+   * Map map = new TransientKeyPersistentValueMap ("/my/map/dir", TransientKeyPersistentValueMap.CREATE);
    * }
    * </pre></blockquote>
    *
@@ -897,7 +893,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    *                                      flag was specified.
    * @throws ClassNotFoundException       Failed to deserialize an object
    * @throws VersionMismatchException     Bad or unsupported version stamp
-   *                                      in <tt>FileHashMap</tt> index file
+   *                                      in <tt>TransientKeyPersistentValueMap</tt> index file
    * @throws ObjectExistsException        One or both of the files already
    *                                      exist, but the {@link #TRANSIENT}
    *                                      flag was set and the
@@ -908,80 +904,66 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * @see #NO_CREATE
    * @see #TRANSIENT
    *
-   * @see #FileHashMap()
-   * @see #FileHashMap(String)
+   * @see #TransientKeyPersistentValueMap()
+   * @see #TransientKeyPersistentValueMap(String)
    */
-  public FileHashMap (String pathPrefix, int flags)
-      throws FileNotFoundException,
-      ObjectExistsException,
-      ClassNotFoundException,
-      VersionMismatchException,
-      IOException
-  {
+  public TransientKeyPersistentValueMap(final String pathPrefix, int flags) throws FileNotFoundException, ObjectExistsException, ClassNotFoundException,
+      VersionMismatchException, IOException {
     assert ( ((~ALL_FLAGS_MASK) & flags) == 0 );
-
-    int filesFound = 0;
 
     this.filePrefix = pathPrefix;
     this.flags      = flags;
 
+    int filesFound = 0;
+
     valuesDBPath    = new File (pathPrefix + DATA_FILE_SUFFIX);
     indexFilePath   = new File (pathPrefix + INDEX_FILE_SUFFIX);
 
-    if ((flags & TRANSIENT) != 0)
+    if ((flags & TRANSIENT) != 0) {
       flags &= (~NO_CREATE);
+    }
 
-    if (valuesDBPath.exists())
+    if (valuesDBPath.exists()) {
       filesFound++;
-    if (indexFilePath.exists())
+    }
+    if (indexFilePath.exists()) {
       filesFound++;
+    }
 
-    if ( (filesFound > 0) && ((flags & TRANSIENT) != 0) )
-    {
-      if ((flags & FORCE_OVERWRITE) == 0)
-      {
+    if ( (filesFound > 0) && ((flags & TRANSIENT) != 0) ) {
+      if ((flags & FORCE_OVERWRITE) == 0) {
         throw new ObjectExistsException
-            (Package.getPackages().toString(), "FileHashMap.diskFilesExist",
+            (Package.getPackages().toString(), "TransientKeyPersistentValueMap.diskFilesExist",
                 "One or both of the hash table files (\"{0}\" " +
                     "and/or \"{1}\") already exists, but the " +
-                    "FileHashMap.FORCE_OVERWRITE constructor flag " +
+                    "TransientKeyPersistentValueMap.FORCE_OVERWRITE constructor flag " +
                     "was not set.",
-                new Object[]
-                    {
+                new Object[] {
                         valuesDBPath.getName(),
                         indexFilePath.getName()
                     });
       }
-
-      // FORCE_OVERWRITE is set. Wipe out the files, and reset the
-      // existence count.
-
       valuesDBPath.delete();
       indexFilePath.delete();
       filesFound = 0;
     }
 
-    switch (filesFound)
-    {
+    switch (filesFound) {
       case 0:
-        if ((flags & NO_CREATE) != 0)
-        {
-          // Can't localize this one. It's not one of our exceptions.
-
+        if ((flags & NO_CREATE) != 0) {
           throw new FileNotFoundException
               ("On-disk hash table \"" +
                   pathPrefix +
                   "\" does not exist, and the " +
-                  "FileHashMap.NO_CREATE flag was set.");
+                  "TransientKeyPersistentValueMap.NO_CREATE flag was set.");
         }
 
         createNewMap (this.valuesDBPath);
         break;
-
       case 1:
         throw new ObjectExistsException
             (Package.getPackages().toString(),
-                "FileHashMap.halfMissing",
+                "TransientKeyPersistentValueMap.halfMissing",
                 "One of the hash table files exists (\"{0}\" " +
                     "or \"{1}\") exists, but the other one does " +
                     "not.",
@@ -990,12 +972,10 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
                         valuesDBPath.getName(),
                         indexFilePath.getName()
                     });
-
       case 2:
         valuesDB = new ValuesFile (valuesDBPath);
         loadIndex();
         break;
-
       default:
         assert (false);
     }
@@ -1053,7 +1033,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     catch (IOException ex)
     {
-      //log.error ("Failed to truncate FileHashMap file \"" +
+      //log.error ("Failed to truncate TransientKeyPersistentValueMap file \"" +
       //        valuesDBPath.getPath() + "\"",
       //    ex);
       valid = false;
@@ -1132,7 +1112,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Deletes the files backing this <tt>FileHashMap</tt>. This method
+   * Deletes the files backing this <tt>TransientKeyPersistentValueMap</tt>. This method
    * implicitly calls {@link #close}.
    */
   public void delete()
@@ -1207,7 +1187,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     checkValidity();
 
     V                   result = null;
-    FileHashMapEntry<K> entry = indexMap.get (key);
+    TransientKeyPersistentValueMapEntry<K> entry = indexMap.get (key);
 
     if (entry != null)
       result = readValueNoError (entry);
@@ -1227,7 +1207,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * <p><b>Warning:</b>: The recommended hash code for each entry in the
    * <tt>entrySet()</tt> view is a combination of hash codes for the
    * entry's key and the entry's value. (See <tt>java.util.Map.Entry</tt>
-   * for details.) Because the values in a <tt>FileHashMap</tt> object
+   * for details.) Because the values in a <tt>TransientKeyPersistentValueMap</tt> object
    * are stored in a file, this method can be quite slow.</p>
    *
    * @return the hash code value for this map.
@@ -1244,8 +1224,8 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Determine whether the <tt>FileHashMap</tt> is valid or not. Once
-   * a <tt>FileHashMap</tt> has been closed, it is invalid and can no
+   * Determine whether the <tt>TransientKeyPersistentValueMap</tt> is valid or not. Once
+   * a <tt>TransientKeyPersistentValueMap</tt> has been closed, it is invalid and can no
    * longer be used.
    *
    * @return <tt>true</tt> if this object is valid, <tt>false</tt> if not
@@ -1322,7 +1302,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     try
     {
-      FileHashMapEntry<K> old = indexMap.get (key);
+      TransientKeyPersistentValueMapEntry<K> old = indexMap.get (key);
 
       // Read the old value first. Then, modify the index and write
       // the new value. That way, we can reclaim the old value's space
@@ -1338,7 +1318,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
         remove (key);
       }
 
-      FileHashMapEntry<K> entry = writeValue (key, value);
+      TransientKeyPersistentValueMapEntry<K> entry = writeValue (key, value);
       indexMap.put (key, entry);
       modified = true;
     }
@@ -1362,39 +1342,37 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    * @return previous value associated with specified key, or <tt>null</tt>
    *         if there was no mapping for key.
    */
-  public V remove (Object key)
-  {
+  public V remove (final Object key) {
     checkValidity();
 
     V result = null;
 
     // We do nothing with the space in the data file for any existing
     // item. It remains in the data file, but is unreferenced.
-
-    if (indexMap.containsKey (key))
-    {
-      FileHashMapEntry<K> entry = indexMap.get (key);
+    if (indexMap.containsKey(key)) {
+      final TransientKeyPersistentValueMapEntry<K> entry = indexMap.get (key);
       result = readValueNoError (entry);
       indexMap.remove (key);
       modified = true;
 
-      if ((flags & RECLAIM_FILE_GAPS) != 0)
-      {
-        // Have to recalculate gaps, since we may be able to coalesce
-        // this returned space with ones to either side of it.
-
-        //log.debug ("Removed value for key \"" +
-        //    key +
-        //    "\" at pos=" +
-        //    entry.getFilePosition() +
-        //    ", size=" +
-        //    entry.getObjectSize() +
-        //    ". Re-figuring gaps.");
+      if ((flags & RECLAIM_FILE_GAPS) != 0) {
         findFileGaps();
       }
     }
-
     return result;
+  }
+
+  public void removeAll() {
+    checkValidity();
+
+    for (final Entry<K, TransientKeyPersistentValueMapEntry<K>> entry : indexMap.entrySet()) {
+      indexMap.remove(entry);
+      modified = true;
+      // readValueNoError(entry);
+      if ((flags & RECLAIM_FILE_GAPS) != 0) {
+        findFileGaps();
+      }
+    }
   }
 
 
@@ -1461,17 +1439,12 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     return new ValueSet();
   }
 
-    /*----------------------------------------------------------------------*\
-                              Private Methods
-    \*----------------------------------------------------------------------*/
-
-  /**
-   * Throw an exception if the object isn't valid.
-   */
-  private void checkValidity()
-  {
-    if (! valid)
-      throw new IllegalStateException ("Invalid FileHashMap object");
+  /*----------------------------------------------------------------------*\
+                            Private Methods
+  \*----------------------------------------------------------------------*/
+  private void checkValidity() {
+    if (!valid)
+      throw new IllegalStateException ("Invalid TransientKeyPersistentValueMap object");
   }
 
   /**
@@ -1486,7 +1459,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
       throws IOException
   {
     this.valuesDB = new ValuesFile (valuesDBPath);
-    this.indexMap = new HashMap<K, FileHashMapEntry<K>>();
+    this.indexMap = new HashMap<K, TransientKeyPersistentValueMapEntry<K>>();
   }
 
   /**
@@ -1509,19 +1482,19 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     //log.debug ("Looking for file gaps.");
 
     if (fileGaps == null)
-      fileGaps = new TreeSet<FileHashMapEntry<K>> (new FileHashMapEntryGapComparator());
+      fileGaps = new TreeSet<TransientKeyPersistentValueMapEntry<K>> (new FileHashMapEntryGapComparator());
     else
       fileGaps.clear();
 
     if (currentSize() > 0)
     {
-      List<FileHashMapEntry<K>>     entries  = getSortedEntries();
-      FileHashMapEntry<K>           previous = null;
-      Iterator<FileHashMapEntry<K>> it       = entries.iterator();
+      List<TransientKeyPersistentValueMapEntry<K>>     entries  = getSortedEntries();
+      TransientKeyPersistentValueMapEntry<K> previous = null;
+      Iterator<TransientKeyPersistentValueMapEntry<K>> it       = entries.iterator();
 
       // Handle the first one specially.
 
-      FileHashMapEntry<K> entry = it.next();
+      TransientKeyPersistentValueMapEntry<K> entry = it.next();
       long pos  = entry.getFilePosition();
       int  size = entry.getObjectSize();
 
@@ -1532,7 +1505,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
         //log.debug ("First entry is at pos " + pos + ", size=" + size);
         size = (int) pos;
         //log.debug ("Gap at position 0 of size " + size);
-        fileGaps.add (new FileHashMapEntry<K> ((long) 0, size));
+        fileGaps.add (new TransientKeyPersistentValueMapEntry<K>((long) 0, size));
       }
 
       previous = entry;
@@ -1552,7 +1525,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
           //log.debug ("Gap at position " + possibleGapPos +
           //    " of size " + gapSize);
-          fileGaps.add (new FileHashMapEntry<K> (possibleGapPos,
+          fileGaps.add (new TransientKeyPersistentValueMapEntry<K>(possibleGapPos,
               gapSize));
         }
 
@@ -1562,17 +1535,17 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   }
 
   /**
-   * Get the list of FileHashMapEntry pointers for the values, sorted
+   * Get the list of TransientKeyPersistentValueMapEntry pointers for the values, sorted
    * in ascending file position order.
    *
-   * @return A sorted list of FileHashMapEntry objects.
+   * @return A sorted list of TransientKeyPersistentValueMapEntry objects.
    */
-  private List<FileHashMapEntry<K>> getSortedEntries()
+  private List<TransientKeyPersistentValueMapEntry<K>> getSortedEntries()
   {
     // Get the set of values in the hash index. Each value is a
-    // FileHashMapEntry object.
+    // TransientKeyPersistentValueMapEntry object.
 
-    List<FileHashMapEntry<K>> vals = new ArrayList<FileHashMapEntry<K>>();
+    List<TransientKeyPersistentValueMapEntry<K>> vals = new ArrayList<TransientKeyPersistentValueMapEntry<K>>();
     vals.addAll (indexMap.values());
 
     // Sort the list.
@@ -1605,8 +1578,8 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     {
       throw new VersionMismatchException
           (Package.getPackages().toString(),
-              "FileHashMap.versionMismatch",
-              "FileHashMap version mismatch in index file " +
+              "TransientKeyPersistentValueMap.versionMismatch",
+              "TransientKeyPersistentValueMap version mismatch in index file " +
                   "\"{0}\". Expected version \"{1}\", found " +
                   "version \"{2}\"",
               new Object[]
@@ -1624,10 +1597,10 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     // making calls like this). See
     // http://www.langer.camelot.de/GenericsFAQ/JavaGenericsFAQ.html#Technicalities
 
-    indexMap = (HashMap<K, FileHashMapEntry<K>>) objStream.readObject();
+    indexMap = (HashMap<K, TransientKeyPersistentValueMapEntry<K>>) objStream.readObject();
   }
 
-  private V readValue (FileHashMapEntry<K> entry)
+  private V readValue (TransientKeyPersistentValueMapEntry<K> entry)
       throws IOException,
       ClassNotFoundException,
       IllegalStateException
@@ -1670,11 +1643,11 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
   /**
    * Read an object without throwing a checked exception on error.
    *
-   * @param entry  The FileHashMapEntry specifying the object's location
+   * @param entry  The TransientKeyPersistentValueMapEntry specifying the object's location
    *
    * @return the object, or null if not found
    */
-  private V readValueNoError (FileHashMapEntry<K> entry)
+  private V readValueNoError (TransientKeyPersistentValueMapEntry<K> entry)
   {
     V obj = null;
 
@@ -1711,11 +1684,11 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     /*if (log.isDebugEnabled())
     {
-      List<FileHashMapEntry<K>> entries = getSortedEntries();
+      List<TransientKeyPersistentValueMapEntry<K>> entries = getSortedEntries();
 
       log.debug ("Just saved index. Total entries=" + currentSize());
       log.debug ("Index values follow.");
-      for (FileHashMapEntry<K> entry : entries)
+      for (TransientKeyPersistentValueMapEntry<K> entry : entries)
       {
         long pos  = entry.getFilePosition();
         int  size = entry.getObjectSize();
@@ -1727,14 +1700,14 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
   /**
    * Write an object to the end of the data file, recording its position
-   * and length in a FileHashMapEntry object. Note: The object to be
+   * and length in a TransientKeyPersistentValueMapEntry object. Note: The object to be
    * stored must implement the <tt>Serializable</tt> interface.
    *
    * @param key   The object's key (specified by the caller of
-   *              FileHashMap.put())
+   *              TransientKeyPersistentValueMap.put())
    * @param obj   The object to serialize and store
    *
-   * @return the FileHashMapEntry object that records the location of
+   * @return the TransientKeyPersistentValueMapEntry object that records the location of
    *         the stored object
    *
    * @throws IOException                Write error
@@ -1742,7 +1715,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
    *
    * @see #readValue
    */
-  private synchronized FileHashMapEntry<K> writeValue (K key, V obj)
+  private synchronized TransientKeyPersistentValueMapEntry<K> writeValue (K key, V obj)
       throws IOException,
       NotSerializableException
   {
@@ -1775,7 +1748,7 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
 
     // Return the entry.
 
-    return new FileHashMapEntry<K> (filePos, size, key);
+    return new TransientKeyPersistentValueMapEntry<K>(filePos, size, key);
   }
 
   /**
@@ -1792,10 +1765,10 @@ public class FileHashMap<K,V> extends AbstractMap<K,V>
     //log.debug ("Finding smallest gap for " + objectSize + "-byte object");
 
     assert (fileGaps != null);
-    for (Iterator<FileHashMapEntry<K>> it = fileGaps.iterator();
+    for (Iterator<TransientKeyPersistentValueMapEntry<K>> it = fileGaps.iterator();
          it.hasNext(); )
     {
-      FileHashMapEntry<K> gap = it.next();
+      TransientKeyPersistentValueMapEntry<K> gap = it.next();
 
       long pos  = gap.getFilePosition();
       int  size = gap.getObjectSize();

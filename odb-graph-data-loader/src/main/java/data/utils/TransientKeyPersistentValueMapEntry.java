@@ -4,12 +4,12 @@ import java.io.Serializable;
 
 /**
  * Stores the location of an on-disk serialized value. Used by
- * <tt>FileHashMap</tt> for its in-memory index and returned sets and
+ * <tt>TransientKeyPersistentValueMap</tt> for its in-memory index and returned sets and
  * iterators. This class is not publicly accessible. It's stored in a
  * separate file, because inner classes cannot be serialized.
  */
-class FileHashMapEntry<K>
-    implements Serializable, Comparable<FileHashMapEntry>
+class TransientKeyPersistentValueMapEntry<K>
+    implements Serializable, Comparable<TransientKeyPersistentValueMapEntry>
 {
     /*----------------------------------------------------------------------*\
                          Private Static Variables
@@ -35,7 +35,7 @@ class FileHashMapEntry<K>
   private int objectSize = -1;
 
   /**
-   * The caller's key (i.e., the key the caller of FileHashMap.put()
+   * The caller's key (i.e., the key the caller of TransientKeyPersistentValueMap.put()
    * specified).
    */
   private K key = null;
@@ -45,25 +45,25 @@ class FileHashMapEntry<K>
     \*----------------------------------------------------------------------*/
 
   /**
-   * Create a new <tt>FileHashMapEntry</tt> that records the location
+   * Create a new <tt>TransientKeyPersistentValueMapEntry</tt> that records the location
    * and length of an item stored in the data file portion of a
-   * <tt>FileHashMap</tt> obejct.
+   * <tt>TransientKeyPersistentValueMap</tt> obejct.
    *
    * @param pos   The object's file position. The object may or may not
    *              actually have been written there yet.
    * @param size  The stored object's serialized size, if known, or -1
    *              if the object has never been written. A non-negative
    *              size value will typically be passed when an existing
-   *              <tt>FileHashMap</tt> is being reloaded from disk.
+   *              <tt>TransientKeyPersistentValueMap</tt> is being reloaded from disk.
    * @param key   The caller's key (i.e., the key the caller of
-   *              <tt>FileHashMap.put()</tt> specified). May be null.
+   *              <tt>TransientKeyPersistentValueMap.put()</tt> specified). May be null.
    *
    * @see #getFilePosition
    * @see #getObjectSize
    * @see #setObjectSize
-   * @see FileHashMap#put
+   * @see TransientKeyPersistentValueMap#put
    */
-  FileHashMapEntry (long pos, int size, K key)
+  TransientKeyPersistentValueMapEntry(long pos, int size, K key)
   {
     this.filePosition = pos;
     this.objectSize   = size;
@@ -82,7 +82,7 @@ class FileHashMapEntry<K>
    * @see #getObjectSize
    * @see #setObjectSize
    */
-  FileHashMapEntry (long pos, int size)
+  TransientKeyPersistentValueMapEntry(long pos, int size)
   {
     this (pos, size, null);
   }
@@ -95,13 +95,13 @@ class FileHashMapEntry<K>
    * Compares this object with the specified object for order. Returns a
    * negative integer, zero, or a positive integer as this object is less
    * than, equal to, or greater than the specified object. The comparison
-   * key for a <tt>FileHashMapEntry</tt> is the file position value.
+   * key for a <tt>TransientKeyPersistentValueMapEntry</tt> is the file position value.
    *
    * @param o  The other object
    */
-  public int compareTo (FileHashMapEntry o)
+  public int compareTo (TransientKeyPersistentValueMapEntry o)
   {
-    FileHashMapEntry  other    = (FileHashMapEntry) o;
+    TransientKeyPersistentValueMapEntry other    = (TransientKeyPersistentValueMapEntry) o;
     Long              thisPos  = new Long (this.filePosition);
     Long              otherPos = new Long (other.filePosition);
 
@@ -116,7 +116,7 @@ class FileHashMapEntry<K>
    */
   public String toString()
   {
-    return ("FileHashMapEntry[filePosition=" +
+    return ("TransientKeyPersistentValueMapEntry[filePosition=" +
         filePosition +
         ", objectSize=" +
         objectSize +
@@ -131,12 +131,12 @@ class FileHashMapEntry<K>
 
   /**
    * Get the caller's key (i.e., the key the caller passed to
-   * <tt>FileHashMap.put()</tt>).
+   * <tt>TransientKeyPersistentValueMap.put()</tt>).
    *
    * @return the key
    *
    * @see #setKey
-   * @see FileHashMap#put
+   * @see TransientKeyPersistentValueMap#put
    */
   K getKey()
   {

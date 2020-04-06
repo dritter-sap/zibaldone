@@ -10,6 +10,7 @@ import data.loaders.BatchCoordinator;
 import data.loaders.GraphDataLoader;
 import data.loaders.GraphDataLoaderConfig;
 import data.loaders.ODBGraphDataLoader;
+import data.utils.TransientKeyPersistentValueMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.slf4j.Logger;
@@ -63,6 +64,9 @@ public class MassGraphDataLoader {
   @Option(name = {"-numberEdges", "--numberEdges"}, description = "Expected number of edges")
   private int numberEdges  = 10;
 
+  @Option(name = {"-cleanup", "--cleanup"}, description = "Delete database after run")
+  private boolean cleanup  = true;
+
   public static void main(String[] args) {
     final SingleCommand<MassGraphDataLoader> parser = SingleCommand.singleCommand(MassGraphDataLoader.class);
     Arrays.asList(args).stream().forEach(p -> System.out.print(p + "##"));
@@ -109,6 +113,7 @@ public class MassGraphDataLoader {
     if (this.numberEdges != 0) {
       props.setProperty("NUMBER_EDGES", String.valueOf(this.numberEdges));
     }
+    props.setProperty("CLEANUP", String.valueOf(cleanup));
   }
 
   public void process(final GraphDataLoader dataLoader, final GraphDataLoaderConfig config, final String userName,
@@ -142,7 +147,7 @@ public class MassGraphDataLoader {
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
         final long start = System.currentTimeMillis();
         dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
-            "UUID_NVARCHAR", bc, contextVertices);
+            "UUID_NVARCHAR", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
         log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
       }
       log.debug("Verify...");
@@ -151,7 +156,7 @@ public class MassGraphDataLoader {
       config.getNumberEdges());
       log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
     } finally {
-      dataLoader.disconnect(config.getDbName());
+      dataLoader.disconnect(config.getDbName(), config.getCleanup());
     }
   }
 
