@@ -147,8 +147,8 @@ public class MassGraphDataLoader {
       }
       log.debug("Verify...");
       final long start = System.currentTimeMillis();
-      //TODO dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
-      //TODO     config.getNumberEdges());
+      dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
+      config.getNumberEdges());
       log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
     } finally {
       dataLoader.disconnect(config.getDbName());

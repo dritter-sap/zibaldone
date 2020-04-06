@@ -53,7 +53,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
   public void disconnect(final String dbName) {
     log.debug("Disconnecting from " + dbName);
     pool.close();
-    orient.drop(dbName);
+    // orient.drop(dbName);
     orient.close();
   }
 
