@@ -121,40 +121,48 @@ public class MassGraphDataLoader {
     config.logSelectedApplicationParameters();
     final BatchCoordinator bc = new BatchCoordinator(config.getBatchSize());
 
-    dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password);
+    dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password, false);
     Map<String, ORID> contextVertices = null;
     try {
-      log.debug("loading vertex keys...");
-      try (final Reader records = new FileReader(vertexFileName)) {
-        // 'getRecords()' removes the records
-        final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
-        final long start = System.currentTimeMillis();
-        contextVertices = dataLoader.loadVertexKeys(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
-            "UUID_NVARCHAR", bc, config.getNumberVertices());
-        log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
-      }
-      log.debug("loading edges...");
-      try (final Reader records = new FileReader(edgeFileName)) {
-        final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
-        final long start = System.currentTimeMillis();
-        dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
-            "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
+      final boolean doImport = false;
+      if (doImport) {
+        log.debug("loading vertex keys...");
+        try (final Reader records = new FileReader(vertexFileName)) {
+          // 'getRecords()' removes the records
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
+          final long start = System.currentTimeMillis();
+          contextVertices = dataLoader.loadVertexKeys(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
+              "UUID_NVARCHAR", bc, config.getNumberVertices());
+          log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
+        }
+        log.debug("loading edges...");
+        try (final Reader records = new FileReader(edgeFileName)) {
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
+          final long start = System.currentTimeMillis();
+          dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
+              "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
+              config.getNumberEdges());
+          log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
+        }
+        log.debug("loading vertex props...");
+        try (final Reader records = new FileReader(vertexFileName)) {
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
+          final long start = System.currentTimeMillis();
+          dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
+              "UUID_NVARCHAR", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
+          log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
+        }
+        log.debug("Verify...");
+        long start = System.currentTimeMillis();
+        dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
             config.getNumberEdges());
-        log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
+        log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
       }
-      log.debug("loading vertex props...");
-      try (final Reader records = new FileReader(vertexFileName)) {
-        final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
-        final long start = System.currentTimeMillis();
-        dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
-            "UUID_NVARCHAR", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
-        log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
-      }
-      log.debug("Verify...");
-      final long start = System.currentTimeMillis();
-      dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
-      config.getNumberEdges());
-      log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
+
+      log.debug("Query...");
+      long start = System.currentTimeMillis();
+      dataLoader.query(bc,"TRAVERSE in, out FROM vertexclass");
+      log.debug("Query(ms) " + (System.currentTimeMillis() - start));
     } finally {
       dataLoader.disconnect(config.getDbName(), config.getCleanup());
     }

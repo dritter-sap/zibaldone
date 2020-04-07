@@ -35,7 +35,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   @Override
   public void connect(final String serverName, final Integer serverPort, final String dbName, final String userName,
-                      final String password) {
+                      final String password, final boolean createDB) {
     log.debug("Connecting to " + serverName + ":" + serverPort + "(db=" + dbName + ")");
     final OrientDBConfigBuilder poolCfg = OrientDBConfig.builder();
     poolCfg.addConfig(OGlobalConfiguration.DB_POOL_MIN, 5);
@@ -50,7 +50,9 @@ public class ODBGraphDataLoader implements GraphDataLoader {
     } else {
       throw new UnsupportedOperationException("Currently only 'embedded' and 'remote' are supported.");
     }
-    orient.create(dbName, ODatabaseType.PLOCAL);
+    if (createDB) {
+      orient.create(dbName, ODatabaseType.PLOCAL);
+    }
     pool = new ODatabasePool(orient, dbName, "admin", "admin", oriendDBconfig);
   }
 
@@ -173,6 +175,22 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         checkNumberElements(expectedNumberEdges, resultSet, "count(*)");
         pb.step();
 
+        bc.end(session);
+      }
+      log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
+    }
+  }
+
+  @Override
+  public void query(final BatchCoordinator bc, final String...queries) {
+    try (final ProgressBar pb = new ProgressBar("Queries", queries.length)) {
+      try (final ODatabaseSession session = pool.acquire()) {
+        bc.begin(session);
+
+        for (final String query : queries) {
+          final OResultSet resultSet = session.query(query);
+          pb.step();
+        }
         bc.end(session);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());

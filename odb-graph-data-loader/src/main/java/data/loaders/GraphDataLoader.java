@@ -7,7 +7,7 @@ import org.apache.commons.csv.CSVParser;
 import java.util.Map;
 
 public interface GraphDataLoader {
-  void connect(String serverName, Integer serverPort, String dbName, String userName, String password);
+  void connect(String serverName, Integer serverPort, String dbName, String userName, String password, boolean createDB);
 
   void disconnect(String dbName, boolean cleanup);
 
@@ -20,6 +20,8 @@ public interface GraphDataLoader {
   void loadVertexProperties(CSVParser records, String[] vertexHeader, String vertexKeyFieldName, BatchCoordinator bc,
                             TransientKeyPersistentValueMap<String, ORID> vertices);
 
-  void verify(BatchCoordinator bc, final String vertexClass, final String edgeClass, long expectedNumberVertices,
+  void verify(BatchCoordinator bc, String vertexClass, String edgeClass, long expectedNumberVertices,
               long expectedNumberEdges);
+
+  void query(BatchCoordinator bc, String...query);
 }
