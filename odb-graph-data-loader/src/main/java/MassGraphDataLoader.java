@@ -121,17 +121,19 @@ public class MassGraphDataLoader {
     config.logSelectedApplicationParameters();
     final BatchCoordinator bc = new BatchCoordinator(config.getBatchSize());
 
-    dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password, false);
+    dataLoader.connect(config.getServerName(), config.getServerPort(), config.getDbName(), userName, password, true); // TODO: add config parameter
     Map<String, ORID> contextVertices = null;
+    final String vertexClass = "VertexClass";
+    final String edgeClass   = "EdgeClass";
     try {
-      final boolean doImport = false;
-      if (doImport) {
+      final boolean doLoad = true; // TODO: add config parameter
+      if (doLoad) {
         log.debug("loading vertex keys...");
         try (final Reader records = new FileReader(vertexFileName)) {
           // 'getRecords()' removes the records
           final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
           final long start = System.currentTimeMillis();
-          contextVertices = dataLoader.loadVertexKeys(csvParser, "VertexClass", Big2graphFixture.VertexHeader,
+          contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, Big2graphFixture.VertexHeader,
               "UUID_NVARCHAR", bc, config.getNumberVertices());
           log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
         }
@@ -139,7 +141,7 @@ public class MassGraphDataLoader {
         try (final Reader records = new FileReader(edgeFileName)) {
           final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
           final long start = System.currentTimeMillis();
-          dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
+          dataLoader.loadEdges(csvParser, edgeClass, Big2graphFixture.EdgeHeader,
               "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
               config.getNumberEdges());
           log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
@@ -154,15 +156,17 @@ public class MassGraphDataLoader {
         }
         log.debug("Verify...");
         long start = System.currentTimeMillis();
-        dataLoader.verify(bc, "VertexClass", "EdgeClass", config.getNumberVertices(),
+        dataLoader.verify(bc, vertexClass, edgeClass, config.getNumberVertices(),
             config.getNumberEdges());
         log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
       }
 
       log.debug("Query...");
       long start = System.currentTimeMillis();
-      dataLoader.query(bc,"TRAVERSE in, out FROM vertexclass");
+      dataLoader.query(bc,"TRAVERSE in, out FROM " + vertexClass);
       log.debug("Query(ms) " + (System.currentTimeMillis() - start));
+    } catch (final Exception e) {
+      log.error("Processing failed.", e);
     } finally {
       dataLoader.disconnect(config.getDbName(), config.getCleanup());
     }
@@ -180,7 +184,7 @@ public class MassGraphDataLoader {
       try (final Reader reader = new FileReader(vertexFileName)) {
         final List<String[]> records = parseFast(reader);
         final long start = System.currentTimeMillis();
-        contextVertices = dataLoader.loadVertexKeys(records, "VertexClass", Big2graphFixture.VertexHeader,
+        contextVertices = dataLoader.loadVertexKeys(records, vertexClass, Big2graphFixture.VertexHeader,
             "UUID_NVARCHAR", bc, config.getNumberVertices());
         log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
       }
@@ -188,7 +192,7 @@ public class MassGraphDataLoader {
       try (final Reader records = new FileReader(edgeFileName)){
         final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
         final long start = System.currentTimeMillis();
-        dataLoader.loadEdges(csvParser, "EdgeClass", Big2graphFixture.EdgeHeader,
+        dataLoader.loadEdges(csvParser, edgeClass, Big2graphFixture.EdgeHeader,
             "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
             config.getNumberEdges());
         log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
