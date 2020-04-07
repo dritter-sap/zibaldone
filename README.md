@@ -1,3 +1,3 @@
 # zibaldone
 
-- OrientDB csv data loader
+- OrientDB csv graph data loader 
