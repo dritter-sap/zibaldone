@@ -1,7 +1,7 @@
 # OrientDB CSV data loader
 
 OrientDB provides several options, when it comes to loading larger amounts of graph data (check [1] for importing large amounts of JSON documents).
-We aim for loading CSV data, but the discussed options can be applied and the source code can be adapted to other formats.
+We aim for loading CSV data, but the discussed options can be applied to other formats.
 
 ### Approaches
 First, if the data consists of simple values like `long` data types, the [graph batch insert](http://orientdb.com/docs/3.0.x/java/Graph-Batch-Insert.html) can be used.
@@ -11,37 +11,28 @@ The SQL interface requires a query for vertex class entries like
 
 ```CREATE EDGE Foo FROM (select from VertexClass WHERE id = 'foobar') TO (SELECT FROM OtherVertexClass WHERE somethinElse > 100)```,
 
-which requires the careful creation of indices to gain some performance.
+which requires the careful creation of indices to gain performance due to the required selection of the source and target vertices.
+(cf. `db.getMetadata().getIndexManager().getIndex("indexName").get(id)`)
 
-In the new multi-model API, OrientDB requires the vertex instances to create edges (cf. `OEdge newEdge(OVertex var1, OVertex var2, String var3);`.
+Similarly, in the new multi-model API, OrientDB requires the vertex instances to create edges (cf. `OEdge newEdge(OVertex var1, OVertex var2, String var3);`.
+Consequently, the vertices could be queried everytime a new edge is created (requires a corresponding index) or the vertices could be kept in memory. While the first option is increasingly slow due to repeated scans over the vertex index to find the correct entry, the second option requires extra memory, which could become critical as well.
+
+To relax the latter concern, we recall that OrientDB works efficiently with record identifiers `ORID`. Those ORIDs are smaller in memory footprint, are returned as a records identity (`vertex.getIdentity()`), and can be used to load vertices on-demand by an O(1) lookup by `db.load(ORID)`, when needed (compared to a slower index scan for the first option). (vertices contain all outgoing edges, which increases the memory consumption)
+
+Further, there exist disk-based maps in Java that allow for the storage of the `value` on disk, but keeping the `key` in memory for fast lookups to reduce the memory footprint even further by offloading the ORIDs to disk.
+
+With those considerations, we tried the following load mechanism:
+
 The idea that we tryout is to do the following:
-
 ```
 1. stream vertex data from file
-2. create vertices, set properties and store OVertex instances in memory
+2. create vertices by setting the key only and store vertex identifiers in persistent map with ORIDs offloaded to disk
 3. stream edge data from file
-4. create edges by lookup of OVertex instances and set properties
-```
-Alternatively, consider keeping smaller OVertex instances in memory at a time (key only):
-
-```
-1. stream vertex data from file
-2. create vertices by setting the key only and store OVertex instances in memory
-3. stream edge data from file
-4. create edges by lookup of OVertex instances and set properties
+4. create edges by lookup of ORIDs, load corresponding vertices and set properties
 5. stream vertex data from file
 6. update OVertex instances
+7. verify result (query)
 ```
-
-### Evaluation
-
-Evaluate on real-world data with 3.9 GB of node and 39.5 GB of edge data.
-OrientDB v3.0.24, Java 1.8:
-
-|                   | Time                    | Space-tool(mem)|
-|-------------------|-------------------------|----------------|
-| Nodes (23876665)  | 782771 ms (~13.02 min)  | 8,193.05 MB    |
-| Edges (123953512) |                         |                |
 
 **Usage**:
 ```
@@ -54,17 +45,21 @@ java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
 
 There are several different approaches to store large amounts of graph data into OrientDB.
 We tried out one, which worked for a real-world data set.
-If you tried out others, which worked or not, feel free to share them here.
+If you try out others, which worked well or not, feel free to share them here.
 
-Alternative design approaches from ground up with batch processing framework include but are not limited to:
+Alternative design approaches from ground up with **batch processing** framework include but are not limited to:
 - Apache Samza: http://samza.apache.org/
 - Spring-batch: https://spring.io/projects/spring-batch
 - Easy batch: https://github.com/j-easy/easy-batch
 
+or CSV libraries
+- 
+
+or persistent maps
+- 
+
 TODOs:
 - add stats: `SummaryStatistics`
-- `db.getMetadata().getIndexManager().getIndex("indexName").get(id)`
-- document node contains all outgoing edges, which increases the memory consumption
 
 ### References
 [1] iiBench: https://github.com/dritter-sap/iibench-mongodb
