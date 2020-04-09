@@ -15,10 +15,10 @@ import java.util.List;
 
 public class TestExternalSorting {
   private static final File csvIn     = new File("src/test/resources/vertices.csv");
-  private static final File csvSorted = new File("src/test/resources/vertices_sorted.csv");
+  private static final File csvSorted = new File("target/vertices_sorted.csv");
 
   final File stringsIn     = new File("src/test/resources/strings.txt");
-  final File stringsSorted = new File("src/test/resources/strings_sorted.txt");
+  final File stringsSorted = new File("target/strings_sorted.txt");
 
   @Test
   public void testStrings() throws Exception {
