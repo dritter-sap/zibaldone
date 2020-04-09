@@ -1,6 +1,6 @@
 # OrientDB CSV data loader
 
-OrientDB provides several options, when it comes to loading larger amounts of graph data.
+OrientDB provides several options, when it comes to loading larger amounts of graph data (check [1] for importing large amounts of JSON documents).
 We aim for loading CSV data, but the discussed options can be applied and the source code can be adapted to other formats.
 
 ### Approaches
@@ -61,10 +61,10 @@ Alternative design approaches from ground up with batch processing framework inc
 - Spring-batch: https://spring.io/projects/spring-batch
 - Easy batch: https://github.com/j-easy/easy-batch
 
-Further interesting libraries?
-- launch4j: http://launch4j.sourceforge.net/index.html
-
 TODOs:
 - add stats: `SummaryStatistics`
 - `db.getMetadata().getIndexManager().getIndex("indexName").get(id)`
 - document node contains all outgoing edges, which increases the memory consumption
+
+### References
+[1] iiBench: https://github.com/dritter-sap/iibench-mongodb
