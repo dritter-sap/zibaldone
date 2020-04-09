@@ -163,7 +163,7 @@ public class MassGraphDataLoader {
 
       log.debug("Query...");
       long start = System.currentTimeMillis();
-      dataLoader.query(bc,"TRAVERSE in, out FROM " + vertexClass);
+      dataLoader.query(bc,"TRAVERSE out FROM " + vertexClass);
       log.debug("Query(ms) " + (System.currentTimeMillis() - start));
     } catch (final Exception e) {
       log.error("Processing failed.", e);

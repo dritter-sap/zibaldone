@@ -32,14 +32,14 @@ public class TestExternalSorting {
         .Builder(CsvExternalSort.DEFAULTMAXTEMPFILES, comparator, 1, CsvExternalSort.estimateAvailableMemory())
         .charset(Charset.defaultCharset())
         .distinct(false)
-        .numHeader(1)
-        .skipHeader(true)
+        // .numHeader(1)
+        // .skipHeader(true)
         .format(CSVFormat.DEFAULT)
         .build();
     final List<File> sortInBatch = CsvExternalSort.sortInBatch(csvIn, null, sortOptions);
     Assert.assertEquals(1, sortInBatch.size());
     final int mergeSortedFiles = CsvExternalSort.mergeSortedFiles(sortInBatch, csvSorted, sortOptions, true);
-    Assert.assertEquals(9, mergeSortedFiles);
+    Assert.assertEquals(10, mergeSortedFiles);
     final BufferedReader reader = new BufferedReader(new FileReader(csvSorted));
     final String readLine = reader.readLine();
     Assert.assertEquals("150469,,,ee307f70-d959-11e4-a891-53b449010d08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NULL", readLine);
