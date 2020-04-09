@@ -53,13 +53,26 @@ Alternative design approaches from ground up with **batch processing** framework
 - Easy batch: https://github.com/j-easy/easy-batch
 
 or CSV libraries
-- 
+
+- univocity-parsers
 
 or persistent maps
+
 - 
+
+or misc
+
+- https://github.com/lemire/externalsortinginjava
 
 TODOs:
 - add stats: `SummaryStatistics`
 
 ### References
 [1] iiBench: https://github.com/dritter-sap/iibench-mongodb
+
+### Acks
+
+Thanks go to 
+- MemoryUtils http://www.java2s.com/Code/Java/Development-Class/ReturnsusedmaxmemoryinMB.htm
+- FileMap: https://github.com/dkpro/jweb1t/blob/master/src/main/java/com/googlecode/jweb1t/FileMap.java
+that inspired parts of the code.
