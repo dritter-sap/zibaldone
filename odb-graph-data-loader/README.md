@@ -1,4 +1,4 @@
-# OrientDB CSV graph data loader
+# OrientDB graph data loader
 
 OrientDB provides several options, when it comes to loading larger amounts of graph data (check [1] for importing large amounts of JSON documents).
 We aim for loading CSV data, but the discussed options can be applied to other formats.
