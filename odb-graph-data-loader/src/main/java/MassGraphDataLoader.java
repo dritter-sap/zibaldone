@@ -6,6 +6,7 @@ import com.orientechnologies.orient.core.id.ORID;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import data.fixtures.Big2graphFixture;
+import data.fixtures.LdbcFixture;
 import data.loaders.BatchCoordinator;
 import data.loaders.GraphDataLoader;
 import data.loaders.GraphDataLoaderConfig;
@@ -131,19 +132,21 @@ public class MassGraphDataLoader {
         log.debug("loading vertex keys...");
         try (final Reader records = new FileReader(vertexFileName)) {
           // 'getRecords()' removes the records
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.VertexHeader).withSkipHeaderRecord()
+              .parse(records); // TODO: make configurable
           final long start = System.currentTimeMillis();
           contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, Big2graphFixture.VertexHeader,
-              "UUID_NVARCHAR", bc, config.getNumberVertices());
+              "id", bc, config.getNumberVertices()); // "UUID_NVARCHAR"
           log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("loading edges...");
         try (final Reader records = new FileReader(edgeFileName)) {
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.EdgeHeader).parse(records);
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.EdgeHeader).withSkipHeaderRecord()
+              .parse(records); // TODO: make configurable
           final long start = System.currentTimeMillis();
           dataLoader.loadEdges(csvParser, edgeClass, Big2graphFixture.EdgeHeader,
-              "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR", contextVertices, bc,
-              config.getNumberEdges());
+              "source", "target", contextVertices, bc,
+              config.getNumberEdges()); // "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR"
           log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("loading vertex props...");
@@ -151,7 +154,7 @@ public class MassGraphDataLoader {
           final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
           final long start = System.currentTimeMillis();
           dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
-              "UUID_NVARCHAR", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
+              "id", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices); // "UUID_NVARCHAR"
           log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("Verify...");
@@ -161,10 +164,10 @@ public class MassGraphDataLoader {
         log.debug("Verification(ms) " + (System.currentTimeMillis() - start));
       }
 
-      log.debug("Query...");
+      /*log.debug("Query...");
       long start = System.currentTimeMillis();
       dataLoader.query(bc,"TRAVERSE out FROM " + vertexClass);
-      log.debug("Query(ms) " + (System.currentTimeMillis() - start));
+      log.debug("Query(ms) " + (System.currentTimeMillis() - start));*/
     } catch (final Exception e) {
       log.error("Processing failed.", e);
     } finally {
