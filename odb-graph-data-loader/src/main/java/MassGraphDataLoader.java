@@ -133,7 +133,7 @@ public class MassGraphDataLoader {
         try (final Reader records = new FileReader(vertexFileName)) {
           // 'getRecords()' removes the records
           final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.VertexHeader).withSkipHeaderRecord()
-              .parse(records); // TODO: make configurable
+              .withDelimiter('|').parse(records); // TODO: make configurable via fixture
           final long start = System.currentTimeMillis();
           contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, Big2graphFixture.VertexHeader,
               "id", bc, config.getNumberVertices()); // "UUID_NVARCHAR"
@@ -142,18 +142,19 @@ public class MassGraphDataLoader {
         log.debug("loading edges...");
         try (final Reader records = new FileReader(edgeFileName)) {
           final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.EdgeHeader).withSkipHeaderRecord()
-              .parse(records); // TODO: make configurable
+              .withDelimiter('|').parse(records); // TODO: make configurable via fixture
           final long start = System.currentTimeMillis();
-          dataLoader.loadEdges(csvParser, edgeClass, Big2graphFixture.EdgeHeader,
+          dataLoader.loadEdges(csvParser, edgeClass, LdbcFixture.EdgeHeader,
               "source", "target", contextVertices, bc,
               config.getNumberEdges()); // "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR"
           log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("loading vertex props...");
         try (final Reader records = new FileReader(vertexFileName)) {
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(Big2graphFixture.VertexHeader).parse(records);
+          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.VertexHeader)
+              .withSkipHeaderRecord().withDelimiter('|').parse(records);
           final long start = System.currentTimeMillis();
-          dataLoader.loadVertexProperties(csvParser, Big2graphFixture.VertexHeader,
+          dataLoader.loadVertexProperties(csvParser, LdbcFixture.VertexHeader,
               "id", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices); // "UUID_NVARCHAR"
           log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
         }
