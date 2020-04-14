@@ -70,7 +70,7 @@ java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
 
 ### Misc
 
-When inserting vertices and edges without defining a schema in the class makes the records schema-less. In other words, the classes do not have the fields, and thus they cannot be used (e.g., for index creattion: cf. https://github.com/orientechnologies/orientdb/issues/6415).
+When inserting vertices and edges without defining a schema in the class makes the records schema-less. In other words, the classes do not have the fields, and thus they cannot be used (e.g., for index creattion: cf. https://github.com/orientechnologies/orientdb/issues/6415). Solution could be `create property <class-name>.<field-name> <data-type>`, which can then be used, e.g. for indexing like `create index <index-name> on <class-name> (<field-name>) NOTUNIQUE`.
 
 ### Summary
 
