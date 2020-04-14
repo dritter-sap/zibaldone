@@ -34,6 +34,31 @@ The idea that we tryout is to do the following:
 7. verify result (query)
 ```
 
+```
+                                                  Frontend
+                                                 +------+
+                                                 |Studio|
+                                                 +---+--+
+                                                     ^
+           data loader                        DB     |
+          +----------------+   remote        +-------+-------+
+Variant A |orientdb|client +----------------->orientdb|server|
+(remote)  |orientdb|graphdb|                 +-----+-+-------+
+          +----------------+                       ^ |
+                                         from disk | | to disk
+           data loader                             | v
+Variant B +-----------------+                    +-+-++
+(embedded)| DB              |                    |Data|
+          +-----------------+                    +----+
+    +---->-|orientdb|server|| +--------------------^
+    |     +-----------------+         to disk
+    |     |                 |
+    +<----+orientdb-client  |
+  embedded|orientdb|graphdb |
+          +-----------------+
+
+```
+
 **Usage**:
 ```
 java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
