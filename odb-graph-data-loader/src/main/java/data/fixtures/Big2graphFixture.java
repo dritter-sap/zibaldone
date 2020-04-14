@@ -1,7 +1,13 @@
 package data.fixtures;
 
-public class Big2graphFixture {
-  public static final String[] VertexHeader = {
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+
+import java.io.IOException;
+import java.io.Reader;
+
+public class Big2graphFixture implements LoadFixture {
+  private static final String[] VertexHeader = {
       "_ID_BIGINT",
       "CITY_NVARCHAR",
       "STREETHOUSENUMBER_NVARCHAR",
@@ -48,7 +54,7 @@ public class Big2graphFixture {
       "SEM_TYPE_NVARCHAR"
   };
 
-  public static final String[] EdgeHeader = {
+  private static final String[] EdgeHeader = {
       "_ID_BIGINT",
       "STARTUUID_NVARCHAR",
       "UUID_NVARCHAR",
@@ -85,4 +91,39 @@ public class Big2graphFixture {
       "ANTEILPROZENT__DECIMAL",
       "OWN_PERCENT_DOUBLE"
   };
+
+  @Override
+  public String[] getVertexHeader() {
+    return VertexHeader;
+  }
+
+  @Override
+  public String[] getEdgeHeader() {
+    return EdgeHeader;
+  }
+
+  @Override
+  public CSVParser getCsvVertexParser(final Reader records) throws IOException {
+    return CSVFormat.DEFAULT.withHeader(VertexHeader).parse(records);
+  }
+
+  @Override
+  public CSVParser getCsvEdgeParser(final Reader records) throws IOException {
+    return CSVFormat.DEFAULT.withHeader(EdgeHeader).parse(records);
+  }
+
+  @Override
+  public String getVertexKey() {
+    return "UUID_NVARCHAR";
+  }
+
+  @Override
+  public String getEdgeSource() {
+    return "STARTUUID_NVARCHAR";
+  }
+
+  @Override
+  public String getEdgeTarget() {
+    return "ENDUUID_NVARCHAR";
+  }
 }

@@ -7,12 +7,12 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import data.fixtures.Big2graphFixture;
 import data.fixtures.LdbcFixture;
+import data.fixtures.LoadFixture;
 import data.loaders.BatchCoordinator;
 import data.loaders.GraphDataLoader;
 import data.loaders.GraphDataLoaderConfig;
 import data.loaders.ODBGraphDataLoader;
 import data.utils.TransientKeyPersistentValueMap;
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 @Cli(name = "basic",
     description = "Provides a basic odb graph data loader CLI",
@@ -34,6 +31,11 @@ public class MassGraphDataLoader {
   private static final Logger log = LoggerFactory.getLogger(MassGraphDataLoader.class);
 
   private static final String DATA_LOADER_PROPERTIES = "dataloader.properties";
+
+  private static final Map<String, LoadFixture> fixtures = new HashMap<String, LoadFixture>() {{
+    put("ldbc", new LdbcFixture());
+    put("big2graph", new Big2graphFixture());
+  }};
 
   @Option(name = {"-user", "--user"}, description = "Database user")
   private String userName = "";
@@ -68,6 +70,9 @@ public class MassGraphDataLoader {
   @Option(name = {"-cleanup", "--cleanup"}, description = "Delete database after run")
   private boolean cleanup  = true;
 
+  @Option(name = {"-fixture", "--fixture"}, description = "Load fixture: {ldbc, big2graph}, default: 'ldbc'")
+  private String fixture  = "ldbc";
+
   public static void main(String[] args) {
     final SingleCommand<MassGraphDataLoader> parser = SingleCommand.singleCommand(MassGraphDataLoader.class);
     Arrays.asList(args).stream().forEach(p -> System.out.print(p + "##"));
@@ -83,7 +88,8 @@ public class MassGraphDataLoader {
       this.mixinCmdParameterValues(props);
       final GraphDataLoaderConfig config = GraphDataLoaderConfig.load(props);
       final long start = System.currentTimeMillis();
-      this.process(graphDataLoader, config, this.userName, this.password, this.vertexFileName, this.edgeFileName);
+      this.process(graphDataLoader, config, this.userName, this.password, this.vertexFileName, this.edgeFileName,
+          fixtures.get(this.fixture));
       log.debug("Process(ms) " + (System.currentTimeMillis() - start));
     } catch (final IOException e) {
       log.debug("Failed to load configuration properties " + DATA_LOADER_PROPERTIES, e);
@@ -114,11 +120,13 @@ public class MassGraphDataLoader {
     if (this.numberEdges != 0) {
       props.setProperty("NUMBER_EDGES", String.valueOf(this.numberEdges));
     }
-    props.setProperty("CLEANUP", String.valueOf(cleanup));
+    props.setProperty("CLEANUP", String.valueOf(this.cleanup));
+    props.setProperty("FIXTURE", this.fixture);
   }
 
   public void process(final GraphDataLoader dataLoader, final GraphDataLoaderConfig config, final String userName,
-                      final String password, final String vertexFileName, final String edgeFileName) throws Exception {
+                      final String password, final String vertexFileName, final String edgeFileName,
+                      final LoadFixture fixture) {
     config.logSelectedApplicationParameters();
     final BatchCoordinator bc = new BatchCoordinator(config.getBatchSize());
 
@@ -131,31 +139,27 @@ public class MassGraphDataLoader {
       if (doLoad) {
         log.debug("loading vertex keys...");
         try (final Reader records = new FileReader(vertexFileName)) {
-          // 'getRecords()' removes the records
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.VertexHeader).withSkipHeaderRecord()
-              .withDelimiter('|').parse(records); // TODO: make configurable via fixture
+          final CSVParser csvParser = fixture.getCsvVertexParser(records);
           final long start = System.currentTimeMillis();
-          contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, Big2graphFixture.VertexHeader,
-              "id", bc, config.getNumberVertices()); // "UUID_NVARCHAR"
+          contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, fixture.getVertexHeader(),
+              fixture.getVertexKey(), bc, config.getNumberVertices());
           log.debug("load vertex keys(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("loading edges...");
         try (final Reader records = new FileReader(edgeFileName)) {
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.EdgeHeader).withSkipHeaderRecord()
-              .withDelimiter('|').parse(records); // TODO: make configurable via fixture
+          final CSVParser csvParser = fixture.getCsvEdgeParser(records);
           final long start = System.currentTimeMillis();
-          dataLoader.loadEdges(csvParser, edgeClass, LdbcFixture.EdgeHeader,
-              "source", "target", contextVertices, bc,
-              config.getNumberEdges()); // "STARTUUID_NVARCHAR", "ENDUUID_NVARCHAR"
+          dataLoader.loadEdges(csvParser, edgeClass, fixture.getEdgeHeader(),
+              fixture.getEdgeSource(), fixture.getEdgeTarget(), contextVertices, bc,
+              config.getNumberEdges());
           log.debug("load edges(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("loading vertex props...");
         try (final Reader records = new FileReader(vertexFileName)) {
-          final CSVParser csvParser = CSVFormat.DEFAULT.withHeader(LdbcFixture.VertexHeader)
-              .withSkipHeaderRecord().withDelimiter('|').parse(records);
+          final CSVParser csvParser = fixture.getCsvVertexParser(records);
           final long start = System.currentTimeMillis();
-          dataLoader.loadVertexProperties(csvParser, LdbcFixture.VertexHeader,
-              "id", bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices); // "UUID_NVARCHAR"
+          dataLoader.loadVertexProperties(csvParser, fixture.getVertexHeader(),
+              fixture.getVertexKey(), bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
           log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("Verify...");
