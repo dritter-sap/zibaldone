@@ -96,11 +96,12 @@ Alternative design approaches from ground up with **batch processing** framework
 - Easy batch: https://github.com/j-easy/easy-batch
 
 or CSV libraries
-
 - univocity-parsers
 
-or misc
+or external maps
+- mapdb: http://www.mapdb.org/
 
+or misc
 - external sorting: https://github.com/lemire/externalsortinginjava
 
 TODOs:
