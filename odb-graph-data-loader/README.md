@@ -68,6 +68,10 @@ java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
 -edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>]
 ```
 
+### Misc
+
+When inserting vertices and edges without defining a schema in the class makes the records schema-less. In other words, the classes do not have the fields, and thus they cannot be used (e.g., for index creattion: cf. https://github.com/orientechnologies/orientdb/issues/6415).
+
 ### Summary
 
 There are several different approaches to store large amounts of graph data into OrientDB.
@@ -92,6 +96,7 @@ TODOs:
 - add stats: `SummaryStatistics`
 
 ### References
+
 [1] iiBench: https://github.com/dritter-sap/iibench-mongodb
 
 ### Acks
