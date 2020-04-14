@@ -34,6 +34,8 @@ The idea that we tryout is to do the following:
 7. verify result (query)
 ```
 
+There are at least two variants on how to load the data: `remote` vs. `embedded`. While `remote` is rather straight forward, `embedded` runs the server within the `data loader` (and thus does not require IPCs). The data is stored to disk and can be read from disk by any ODB instance that has access to the database in its `databases` folder. While the data can be seamlessly used in the ODB studio in both cases, the `embedded` version has faster load times.
+
 ```
                                                   Frontend
                                                  +------+
@@ -48,7 +50,7 @@ Variant A |orientdb|client +----------------->orientdb|server|
                                          from disk | | to disk
            data loader                             | v
 Variant B +-----------------+                    +-+-++
-(embedded)| DB              |                    |Data|
+(embedded)| DB              |              Disk  |Data|
           +-----------------+                    +----+
     +---->-|orientdb|server|| +--------------------^
     |     +-----------------+         to disk
