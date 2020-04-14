@@ -40,7 +40,7 @@ public class BatchCoordinator {
   }
 
   public void iterateVertices(final ODatabaseSession session, final long recordNumber, final ProgressBar pb,
-                      Map<String, OElement> batchLocal, Map<String, ORID> globalContext) {
+                      final Map<String, OElement> batchLocal, final Map<String, ORID> globalContext) {
     if (recordNumber % batchSize == 0) {
       session.commit();
       pb.stepBy(batchSize);

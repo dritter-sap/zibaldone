@@ -68,10 +68,13 @@ public class MassGraphDataLoader {
   private int numberEdges  = 10;
 
   @Option(name = {"-cleanup", "--cleanup"}, description = "Delete database after run")
-  private boolean cleanup  = true;
+  private String cleanup  = "true";
 
-  @Option(name = {"-fixture", "--fixture"}, description = "Load fixture: {ldbc, big2graph}, default: 'ldbc'")
+  @Option(name = {"-fixture", "--fixture"}, description = "Load fixture: {ldbc, big2graph}; default: 'ldbc'")
   private String fixture  = "ldbc";
+
+  @Option(name = {"-persistentmap", "--persistentmap"}, description = "Persistent key map; default: false")
+  private String persistentmap  = "false";
 
   public static void main(String[] args) {
     final SingleCommand<MassGraphDataLoader> parser = SingleCommand.singleCommand(MassGraphDataLoader.class);
@@ -83,6 +86,8 @@ public class MassGraphDataLoader {
   private void run() {
     final Properties props = new Properties();
     final GraphDataLoader graphDataLoader = new ODBGraphDataLoader();
+    graphDataLoader.withPersistentMap(Boolean.parseBoolean(this.persistentmap));
+
     try {
       props.load(MassGraphDataLoader.class.getResourceAsStream(DATA_LOADER_PROPERTIES));
       this.mixinCmdParameterValues(props);
@@ -120,7 +125,7 @@ public class MassGraphDataLoader {
     if (this.numberEdges != 0) {
       props.setProperty("NUMBER_EDGES", String.valueOf(this.numberEdges));
     }
-    props.setProperty("CLEANUP", String.valueOf(this.cleanup));
+    props.setProperty("CLEANUP", this.cleanup);
     props.setProperty("FIXTURE", this.fixture);
   }
 
@@ -159,7 +164,7 @@ public class MassGraphDataLoader {
           final CSVParser csvParser = fixture.getCsvVertexParser(records);
           final long start = System.currentTimeMillis();
           dataLoader.loadVertexProperties(csvParser, fixture.getVertexHeader(),
-              fixture.getVertexKey(), bc, (TransientKeyPersistentValueMap<String, ORID>) contextVertices);
+              fixture.getVertexKey(), bc, contextVertices);
           log.debug("load vertex props(ms) " + (System.currentTimeMillis() - start));
         }
         log.debug("Verify...");

@@ -32,6 +32,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   private OrientDB      orient;
   private ODatabasePool pool; // pool not thread-safe
+  private boolean persistentmap;
 
   @Override
   public void connect(final String serverName, final Integer serverPort, final String dbName, final String userName,
@@ -77,10 +78,14 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                              final String[] vertexHeader, final String vertexKeyFieldName,
                                              final BatchCoordinator bc, final long expectedMax) {
     try (final ProgressBar pb = new ProgressBar("Vertex keys", expectedMax)) {
-      // final Map<String, ORID> vertices = new HashMap<>();
-      createDirIfNotExists(persistentMapPathPrefix);
-      final TransientKeyPersistentValueMap<String, ORID> vertices = new TransientKeyPersistentValueMap<>(
-          persistentMapPathPrefix + "odb", 0);
+      final Map<String, ORID> vertices;
+      if (persistentmap) {
+        createDirIfNotExists(persistentMapPathPrefix);
+        vertices = new TransientKeyPersistentValueMap<>(
+            persistentMapPathPrefix + "odb", 0);
+      } else {
+        vertices = new HashMap<>();
+      }
       try (final ODatabaseSession session = pool.acquire()) {
         session.createVertexClass(odbVertexClassName);
 
@@ -101,8 +106,10 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         pb.stepTo(expectedMax);
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
-      pb.setExtraMessage("Saving file map values");
-      vertices.save();
+      if (persistentmap) {
+        pb.setExtraMessage("Saving file map values");
+        ((TransientKeyPersistentValueMap)vertices).save();
+      }
       MemoryUtils.freeMemory();
       return vertices;
     } catch (final IOException | ObjectExistsException | VersionMismatchException | ClassNotFoundException e) {
@@ -141,7 +148,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
 
   @Override
   public void loadVertexProperties(final CSVParser records, final String[] vertexHeader, final String vertexKeyFieldName,
-                                   final BatchCoordinator bc, final TransientKeyPersistentValueMap<String, ORID> vertices) {
+                                   final BatchCoordinator bc, final Map<String, ORID> vertices) {
     try (ProgressBar pb = new ProgressBar("Vertex props", vertices.size())) {
       try (final ODatabaseSession session = pool.acquire()) {
         bc.begin(session);
@@ -154,7 +161,10 @@ public class ODBGraphDataLoader implements GraphDataLoader {
         }
         bc.end(session);
         pb.stepTo(vertices.size());
-        vertices.removeAll();
+
+        if (persistentmap) {
+          ((TransientKeyPersistentValueMap<String, ORID>) vertices).removeAll();
+        }
       }
       MemoryUtils.freeMemory();
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
@@ -195,6 +205,11 @@ public class ODBGraphDataLoader implements GraphDataLoader {
       }
       log.debug("Mem(used/max) {}/{}", MemoryUtils.usedMemoryInMB(), MemoryUtils.maxMemoryInMB());
     }
+  }
+
+  @Override
+  public void withPersistentMap(final boolean persistentmap) {
+    this.persistentmap = persistentmap;
   }
 
   private void checkNumberElements(final long expectedNumberElements, final OResultSet resultSet, final String propertyName) {

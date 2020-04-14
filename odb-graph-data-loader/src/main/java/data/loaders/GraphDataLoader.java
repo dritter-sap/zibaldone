@@ -18,10 +18,12 @@ public interface GraphDataLoader {
                  String edgeTrgtKeyFieldName, Map<String, ORID> vertices, BatchCoordinator bc, long expectedMax);
 
   void loadVertexProperties(CSVParser records, String[] vertexHeader, String vertexKeyFieldName, BatchCoordinator bc,
-                            TransientKeyPersistentValueMap<String, ORID> vertices);
+                            Map<String, ORID> vertices);
 
   void verify(BatchCoordinator bc, String vertexClass, String edgeClass, long expectedNumberVertices,
               long expectedNumberEdges);
 
   void query(BatchCoordinator bc, String...query);
+
+  void withPersistentMap(boolean persistentmap);
 }
