@@ -56,15 +56,12 @@ or CSV libraries
 
 - univocity-parsers
 
-or persistent maps
-
-- 
-
 or misc
 
-- https://github.com/lemire/externalsortinginjava
+- external sorting: https://github.com/lemire/externalsortinginjava
 
 TODOs:
+- multi-threading
 - add stats: `SummaryStatistics`
 
 ### References
