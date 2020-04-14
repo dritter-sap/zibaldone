@@ -27,7 +27,7 @@ import java.util.Map;
 public class ODBGraphDataLoader implements GraphDataLoader {
   private static final Logger log = LoggerFactory.getLogger(ODBGraphDataLoader.class);
 
-  private static final String persistentMapPathPrefix = System.getProperty("java.io.tmpdir")
+  private static final String persistentMapPathPrefix = System.getProperty("java.io.tmpdir") + System.getProperty("file.separator")
       + "odb" + System.getProperty("file.separator");
 
   private OrientDB      orient;

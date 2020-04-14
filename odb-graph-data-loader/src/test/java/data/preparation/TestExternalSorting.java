@@ -42,7 +42,7 @@ public class TestExternalSorting {
     Assert.assertEquals(10, mergeSortedFiles);
     final BufferedReader reader = new BufferedReader(new FileReader(csvSorted));
     final String readLine = reader.readLine();
-    Assert.assertEquals("150469,,,ee307f70-d959-11e4-a891-53b449010d08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NULL", readLine);
+    Assert.assertEquals("107901,,,0d846390-d93d-11e4-a891-53b449010d08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NULL", readLine);
     reader.close();
   }
 }
