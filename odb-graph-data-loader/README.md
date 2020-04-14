@@ -62,11 +62,23 @@ Variant B +-----------------+                    +-+-++
 ```
 
 **Usage**:
+
+Use the loader by building
+
+```
+mvn [clean] package
+```
+
+then go to `target` directory of `odbgraphdataloader` and execute:
+
 ```
 java -jar odbgraphdataloader.jar -host [plocal:/<path>|remote:<host>] \
 -user <user> -password <passwd> -dbname <dbname> -vertexFileName <path-vertex>.csv \
--edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>]
+-edgeFileName <path-edge>.csv -batchSize 1000 [-numberVertices <numberVertices>] [-numberEdges <numberEdges>] \
+-fixture ldbc -persistentmap "false" -cleanup "false"
 ```
+
+Note that `fixture` is a non-trivial configuration that currently only supports the `ldbc` schema and an arbitrary one `big2graph`. To add support for your case, implement `LoadFixture` interface and add the necessary information (similar to the existing fixtures). The option `persistentmap` allows to select a map that off-loads the values to disk (to save memory), else an in-memory map is used. If `cleanup` is false, then the [embedded:/<path>] will not be cleared and the database can be used from the studio or console etc.
 
 ### Misc
 
