@@ -17,6 +17,7 @@ import org.apache.commons.csv.CSVParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -143,7 +144,8 @@ public class MassGraphDataLoader {
       final boolean doLoad = true; // TODO: add config parameter
       if (doLoad) {
         log.debug("loading vertex keys...");
-        try (final Reader records = new FileReader(vertexFileName)) {
+        try (final Reader records = new BufferedReader(new FileReader(vertexFileName))) { // TODO: specify read size in constructor
+          // Iterable<CSVRecord> records = CSVFormat.RFC4180.parse(reader); // TODO: and parallelize
           final CSVParser csvParser = fixture.getCsvVertexParser(records);
           final long start = System.currentTimeMillis();
           contextVertices = dataLoader.loadVertexKeys(csvParser, vertexClass, fixture.getVertexHeader(),

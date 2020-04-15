@@ -1,4 +1,4 @@
-package data.preparation;
+package data.sorting;
 
 import com.google.code.externalsorting.ExternalSort;
 import org.apache.commons.csv.CSVFormat;
@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class TestExternalSorting {
-  private static final File csvIn     = new File("src/test/resources/vertices.csv");
+  private static final File csvIn     = new File("src/test/resources/ldbc_vertices.csv");
   private static final File csvSorted = new File("target/vertices_sorted.csv");
 
   final File stringsIn     = new File("src/test/resources/strings.txt");
@@ -39,10 +39,10 @@ public class TestExternalSorting {
     final List<File> sortInBatch = CsvExternalSort.sortInBatch(csvIn, null, sortOptions);
     Assert.assertEquals(1, sortInBatch.size());
     final int mergeSortedFiles = CsvExternalSort.mergeSortedFiles(sortInBatch, csvSorted, sortOptions, true);
-    Assert.assertEquals(10, mergeSortedFiles);
+    Assert.assertEquals(7, mergeSortedFiles);
     final BufferedReader reader = new BufferedReader(new FileReader(csvSorted));
     final String readLine = reader.readLine();
-    Assert.assertEquals("107901,,,0d846390-d93d-11e4-a891-53b449010d08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NULL", readLine);
+    Assert.assertEquals("comment.137438953499|||2011-06-22T01:20:39.061+0000|212.217.91.169|Internet Explorer|maybe|5||comment||||||||", readLine);
     reader.close();
   }
 }

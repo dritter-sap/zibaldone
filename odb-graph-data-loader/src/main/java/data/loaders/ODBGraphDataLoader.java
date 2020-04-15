@@ -79,7 +79,7 @@ public class ODBGraphDataLoader implements GraphDataLoader {
                                              final BatchCoordinator bc, final long expectedMax) {
     try (final ProgressBar pb = new ProgressBar("Vertex keys", expectedMax)) {
       final Map<String, ORID> vertices;
-      if (persistentmap) {
+      if (persistentmap) { // TODO: make sure that the maps are local or thread safe
         createDirIfNotExists(persistentMapPathPrefix);
         vertices = new TransientKeyPersistentValueMap<>(
             persistentMapPathPrefix + "odb", 0);

@@ -1,4 +1,4 @@
-package data.preparation;
+package data.sorting;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
