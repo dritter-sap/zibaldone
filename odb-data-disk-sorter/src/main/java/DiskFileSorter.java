@@ -43,10 +43,7 @@ public class DiskFileSorter {
       final long start = System.currentTimeMillis();
       final List<File> tmpFiles = this.process(comparator, this.inputFileName);
       log.debug("Process(ms) " + (System.currentTimeMillis() - start));
-
-      for (final File tmpFile : tmpFiles) {
-        log.debug(tmpFile.getAbsolutePath());
-      }
+      log.debug(tmpFiles.get(0).getAbsolutePath());
     } catch (final IOException e) {
       log.debug("Failed to load file " + this.inputFileName, e);
     } catch (final Exception e) {
