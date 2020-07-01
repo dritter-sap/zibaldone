@@ -105,8 +105,8 @@ or misc
 - external sorting: https://github.com/lemire/externalsortinginjava
 
 TODOs:
-- multi-threading
-- add stats: `SummaryStatistics`
+- [ ] multi-threading
+- [ ] add stats: `SummaryStatistics`
 
 ### References
 
