@@ -104,7 +104,8 @@ or external maps
 or misc
 - external sorting: https://github.com/lemire/externalsortinginjava
 
-TODOs:
+**TODOs**:
+
 - [ ] multi-threading
 - [ ] add stats: `SummaryStatistics`
 
