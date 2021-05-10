@@ -2,3 +2,11 @@
 
 - OrientDB graph data loader from CSV
 - Disk-based data sorter
+
+Setup:
+
+Build with maven:
+
+```
+mvn clean package
+```
