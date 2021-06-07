@@ -3,9 +3,9 @@
 - OrientDB graph data loader from CSV
 - Disk-based data sorter
 
-Setup:
+### Setup
 
-Build with maven:
+Clone the repository, navigate and build with maven:
 
 ```
 mvn clean package
