@@ -9,6 +9,7 @@
     <modules>
         <module>odb-graph-data-loader</module>
         <module>odb-data-disk-sorter</module>
+        <module>odb-miniml-benchmark</module>
     </modules>
     <groupId>zibaldone</groupId>
     <version>0.0.1-SNAPSHOT</version>
