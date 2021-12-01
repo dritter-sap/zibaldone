@@ -11,3 +11,7 @@ Clone the repository, navigate and build with maven:
 ```
 mvn clean package
 ```
+
+**TODOs**
+
+- [ ] switch build from TravisCI to a non-commercial offering (e.g. GitHub Actions)
