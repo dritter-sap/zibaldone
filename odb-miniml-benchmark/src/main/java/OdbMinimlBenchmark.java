@@ -13,13 +13,15 @@ public class OdbMinimlBenchmark {
     public static void main(String[] args) {
         final OdbMinimlBenchmark odbBench = new OdbMinimlBenchmark();
         try {
-            odbBench.execute("remote:" + args[0], args[1], args[2], args[3]);
+            odbBench.execute("remote:" + args[0], "zetomap", args[1], args[2]);
+            odbBench.execute("remote:" + args[0], "zetomap_idx", args[1], args[2]);
         } catch (final Exception e) {
             e.printStackTrace();
         }
     }
 
     private void execute(final String url, final String databaseName, final String userName, final String password) throws Exception {
+        System.out.println("Checking database: " + databaseName);
         try {
             odbc.connect(url, 2424, databaseName, userName, password);
             this.executeQuery1();
@@ -34,7 +36,7 @@ public class OdbMinimlBenchmark {
     }
 
     private void executeQuery1() {
-        System.out.println("Checking query1...");
+        // System.out.println("Checkingquery1...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -49,11 +51,11 @@ public class OdbMinimlBenchmark {
         params.put("key", "GSE105766");
         stats.addValue(executeQuery("SELECT * FROM series WHERE iid = :key", params));
 
-        System.out.println("Query1: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query1," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery2() {
-        System.out.println("Checking query2...");
+        // System.out.println("Checkingquery2...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -68,11 +70,11 @@ public class OdbMinimlBenchmark {
         params.put("key", "GSE150046");
         stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM (SELECT expand(outE(\"has_sample\").inV()) FROM series WHERE iid = :key))", params));
 
-        System.out.println("Query2: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query2," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery3() {
-        System.out.println("Checking query3...");
+        // System.out.println("Checkingquery3...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -87,11 +89,11 @@ public class OdbMinimlBenchmark {
         params.put("key", "GSM4568913");
         stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM sample WHERE iid = :key)", params));
 
-        System.out.println("Query3: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query3," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery4() {
-        System.out.println("Checking query4...");
+        // System.out.println("Checkingquery4...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -101,11 +103,11 @@ public class OdbMinimlBenchmark {
         stats.addValue(executeQuery("SELECT * FROM sample WHERE :parameter in channels.characteristics.keys()", params));
         stats.addValue(executeQuery("SELECT * FROM sample WHERE :parameter in channels.characteristics.keys()", params));
 
-        System.out.println("Query4: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query4," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery5() {
-        System.out.println("Checking query5...");
+        // System.out.println("Checkingquery5...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -120,11 +122,11 @@ public class OdbMinimlBenchmark {
         params.put("parameter", "zebrafish neuromast hair cells");
         stats.addValue(executeQuery("SELECT * FROM sample WHERE channels.characteristics.tissue = :parameter", params));
 
-        System.out.println("Query5: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query5," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery6() {
-        System.out.println("Checking query6...");
+        // System.out.println("Checkingquery6...");
 
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
@@ -139,7 +141,7 @@ public class OdbMinimlBenchmark {
         params.put("key", "GPL25922");
         stats.addValue(executeQuery("SELECT * FROM series WHERE platforms.iid = :key", params));
 
-        System.out.println("Query6: " + stats.getMean() / 1000000 + " ms");
+        System.out.println("Query6," + stats.getMean() / 1000000 + " ms");
     }
 
     private double executeQuery(final String query, final Map<String, Object> params) {
@@ -156,7 +158,7 @@ public class OdbMinimlBenchmark {
             stats.addValue(runningTime);
             // System.out.println(runningTime / 1000000);
         }
-        // System.out.println("Mean:" + stats.getMean() / 1000000 + "Manual: " + stats.getSum() / ITERATIONS);
+        // System.out.println("Mean:" + stats.getMean() / 1000000 + "Manual," + stats.getSum() / ITERATIONS);
         return stats.getMean();
     }
 }
