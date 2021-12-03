@@ -7,6 +7,12 @@ import java.util.Map;
 
 public class OdbMinimlBenchmark {
     private static final int ITERATIONS = 100;
+    public static final String QUERY_2 = "SELECT characteristics FROM (SELECT expand(channels) FROM (SELECT expand(outE(\"has_sample\").inV()) FROM series WHERE iid = :key))";
+    public static final String QUERY_6 = "SELECT * FROM series WHERE platforms containsAny (select * from platform where iid = :key)";
+    public static final String QUERY_5 = "SELECT * FROM sample WHERE channels containsAny (select * from channel where characteristics.treatment_raw = :parameter)";
+    public static final String QUERY_4 = "SELECT * FROM sample where channels containsAny (select * from channel where characteristics containsKey :parameter)";
+    public static final String QUERY_3 = "SELECT characteristics FROM (SELECT expand(channels) FROM sample WHERE iid = :key)";
+    public static final String QUERY_1 = "SELECT * FROM series WHERE iid = :key";
 
     private final OdbConnector odbc = new OdbConnector();
 
@@ -36,119 +42,105 @@ public class OdbMinimlBenchmark {
     }
 
     private void executeQuery1() {
-        // System.out.println("Checkingquery1...");
-
         final SummaryStatistics stats = new SummaryStatistics();
+
         Map<String, Object> params = new HashMap<>();
         params.put("key", "GSE105766");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_1, params));
 
         params = new HashMap<>();
         params.put("key", "GSE164728");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_1, params));
 
         params = new HashMap<>();
         params.put("key", "GSE105766");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_1, params));
 
         System.out.println("Query1," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery2() {
-        // System.out.println("Checkingquery2...");
-
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
         params.put("key", "GSE163826");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM (SELECT expand(outE(\"has_sample\").inV()) FROM series WHERE iid = :key))", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_2, params));
 
         params = new HashMap<>();
         params.put("key", "GSE152189");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM (SELECT expand(outE(\"has_sample\").inV()) FROM series WHERE iid = :key))", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_2, params));
 
         params = new HashMap<>();
         params.put("key", "GSE150046");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM (SELECT expand(outE(\"has_sample\").inV()) FROM series WHERE iid = :key))", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_2, params));
 
         System.out.println("Query2," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery3() {
-        // System.out.println("Checkingquery3...");
-
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
         params.put("key", "GSM4521284");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM sample WHERE iid = :key)", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_3, params));
 
         params = new HashMap<>();
         params.put("key", "GSM5028203");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM sample WHERE iid = :key)", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_3, params));
 
         params = new HashMap<>();
         params.put("key", "GSM4568913");
-        stats.addValue(executeQuery("SELECT characteristics FROM (SELECT expand(channels) FROM sample WHERE iid = :key)", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_3, params));
 
         System.out.println("Query3," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery4() {
-        // System.out.println("Checkingquery4...");
-
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
         params.put("parameter", "treatment_raw");
 
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE :parameter in channels.characteristics.keys()", params));
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE :parameter in channels.characteristics.keys()", params));
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE :parameter in channels.characteristics.keys()", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_4, params));
+        stats.addValue(executeAndMeasureQuery(QUERY_4, params));
+        stats.addValue(executeAndMeasureQuery(QUERY_4, params));
 
         System.out.println("Query4," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery5() {
-        // System.out.println("Checkingquery5...");
-
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
         params.put("parameter", "H1");
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE channels.characteristics.treatment_raw = :parameter", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_5, params));
 
         params = new HashMap<>();
         params.put("parameter", "wild type");
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE channels.characteristics.genotype = :paremeter", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_5, params));
 
         params = new HashMap<>();
         params.put("parameter", "zebrafish neuromast hair cells");
-        stats.addValue(executeQuery("SELECT * FROM sample WHERE channels.characteristics.tissue = :parameter", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_5, params));
 
         System.out.println("Query5," + stats.getMean() / 1000000 + " ms");
     }
 
     private void executeQuery6() {
-        // System.out.println("Checkingquery6...");
-
         final SummaryStatistics stats = new SummaryStatistics();
         Map<String, Object> params = new HashMap<>();
         params.put("key", "GPL24995");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE platforms.iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_6, params));
 
         params = new HashMap<>();
         params.put("key", "GPL14875");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE platforms.iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_6, params));
 
         params = new HashMap<>();
         params.put("key", "GPL25922");
-        stats.addValue(executeQuery("SELECT * FROM series WHERE platforms.iid = :key", params));
+        stats.addValue(executeAndMeasureQuery(QUERY_6, params));
 
         System.out.println("Query6," + stats.getMean() / 1000000 + " ms");
     }
 
-    private double executeQuery(final String query, final Map<String, Object> params) {
-        return executeAndMeasureQuery(params, query);
-    }
 
-    private double executeAndMeasureQuery(final Map<String, Object> params, final String query) {
+    private double executeAndMeasureQuery(final String query, final Map<String, Object> params) {
         final SummaryStatistics stats = new SummaryStatistics();
         for (int i = 0; i < ITERATIONS; i++) {
             long start = System.nanoTime();
@@ -156,9 +148,7 @@ public class OdbMinimlBenchmark {
             }
             long runningTime = System.nanoTime() - start;
             stats.addValue(runningTime);
-            // System.out.println(runningTime / 1000000);
         }
-        // System.out.println("Mean:" + stats.getMean() / 1000000 + "Manual," + stats.getSum() / ITERATIONS);
         return stats.getMean();
     }
 }
