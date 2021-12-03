@@ -3,6 +3,7 @@
 
 - OrientDB graph data loader from CSV
 - Disk-based data sorter
+- Miniml tester
 
 ### Setup
 
